@@ -5,6 +5,11 @@
 #ifndef ROBOCONVISION_SIGNAL_CHANGE_H
 #define ROBOCONVISION_SIGNAL_CHANGE_H
 
+#define SRED 0
+#define SYELLOW 1
+#define SBLUE 2
+#define SORANGE 3
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
@@ -39,7 +44,7 @@ public:
     int iHighV1 = 255;
 
     explicit SignalWatcher(cv::VideoCapture capture) {
-        capture = capture;
+        this->capture = capture;
     };
 public:
 

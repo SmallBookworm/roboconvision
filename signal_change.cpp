@@ -18,15 +18,14 @@ int SignalWatcher::watch() {
     if (this->capture.isOpened()) {
         Mat srcImage;//定义一个srcImage变量，用于存储每一帧的图像
         capture >> srcImage;  //读取当前帧
-//        if (!capture.grab()) {               // 抓取一帧,失败退出
-//            break;
-//        }
+        if(srcImage.empty())
+            return  -1;
 
         Mat Image_hsv;//临时变量和目标图的定义
         Mat dstImage(srcImage.size(), srcImage.type());
         dstImage = Scalar::all(0);
         //【2】显示原始图
-        //imshow("【原始图】", srcImage);
+        imshow("【原始图】", srcImage);
 
         //【3】转为HSV图并进行图像平滑
         cvtColor(srcImage, Image_hsv, COLOR_BGR2HSV);//转化边缘检测后的图为HSV图
@@ -73,13 +72,10 @@ int SignalWatcher::watch() {
                 if (contours[i].capacity() > 100) {
                     boundRect[i] = boundingRect(contours[i]);
                     if (boundRect[i].height > 50 && boundRect[i].width > 50) {
-                        //6.绘制正外接矩形并添加文字
-                        rectangle(srcImage, boundRect[i], Scalar(0, 255, 0), 1, 8);
-                        color = 0;
+                        color = SRED;
                         cout << "红" << "" << boundRect[i].x << " " << boundRect[i].y << " " << boundRect[i].width << " "
                              << boundRect[i].height << endl;
                         return color;
-                        continue;
 
                     }
                 }
@@ -94,12 +90,10 @@ int SignalWatcher::watch() {
                 if (contours[i].capacity() > 100) {
                     boundRect[i] = boundingRect(contours[i]);
                     if (boundRect[i].height > 50 && boundRect[i].width > 50) {
-                        //6.绘制正外接矩形并添加文字
-                        rectangle(srcImage, boundRect[i], Scalar(0, 255, 0), 1, 8);
-                        color = 1;
+                        color = SYELLOW;
                         cout << "黄" << "" << boundRect[i].x << " " << boundRect[i].y << " " << boundRect[i].width << " "
                              << boundRect[i].height << endl;
-                        continue;
+                        return color;
 
                     }
                 }
@@ -114,12 +108,10 @@ int SignalWatcher::watch() {
                 if (contours[i].capacity() > 100) {
                     boundRect[i] = boundingRect(contours[i]);
                     if (boundRect[i].height > 50 && boundRect[i].width > 50) {
-                        //6.绘制正外接矩形并添加文字
-                        rectangle(srcImage, boundRect[i], Scalar(0, 255, 0), 1, 8);
-                        color = 2;
+                        color = SBLUE;
                         cout << "蓝" << "" << boundRect[i].x << " " << boundRect[i].y << " " << boundRect[i].width << " "
                              << boundRect[i].height << endl;
-                        continue;
+                        return color;
                     }
                 }
             }
@@ -133,18 +125,14 @@ int SignalWatcher::watch() {
                 if (contours[i].capacity() > 100) {
                     boundRect[i] = boundingRect(contours[i]);
                     if (boundRect[i].height > 50 && boundRect[i].width > 50) {
-                        //6.绘制正外接矩形并添加文字
-                        rectangle(srcImage, boundRect[i], Scalar(0, 255, 0), 1, 8);
-                        color = 3;
+                        color = SORANGE;
                         cout << "橙" << "" << boundRect[i].x << " " << boundRect[i].y << " " << boundRect[i].width << " "
                              << boundRect[i].height << endl;
-                        continue;
+                        return color;
                     }
                 }
             }
         }
-        //7.显示每一帧，并按原FPS显示
-        imshow("ans", srcImage);
     }
     return -1;
 }
