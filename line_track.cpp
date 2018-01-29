@@ -107,7 +107,7 @@ Point2f LineTracker::watch() {
 //    pCapture >> frame;
 //    imshow("show",frame);
 
-    VideoCapture cap=this->capture;
+    VideoCapture cap = this->capture;
     if (!cap.isOpened()) {
         throw "capture is closed";
     }
@@ -193,7 +193,7 @@ Point2f LineTracker::watch() {
     //cv::Canny(image, contours, 155, 350);
 
     //第一种找直线方法
-    LineFinder finder=this->finder;
+    LineFinder finder = this->finder;
 
     // Detect lines and draw them
     std::vector<cv::Vec4i> lines = finder.findLines(imageContours);
