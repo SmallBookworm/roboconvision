@@ -109,7 +109,7 @@ Point2f LineTracker::watch() {
 
     VideoCapture cap = this->capture;
     if (!cap.isOpened()) {
-        throw "capture is closed";
+        throw "capture is closed\n";
     }
     Mat frame;
     Mat edges;
@@ -122,9 +122,9 @@ Point2f LineTracker::watch() {
     Mat binaryImage;
 
     cvtColor(srcImage, midImage, CV_BGR2GRAY);
-    imshow("midIm,age", midImage);
+    //imshow("midIm,age", midImage);
     threshold(midImage, binaryImage, 170, 255, CV_THRESH_BINARY);
-    imshow("binaryImage", binaryImage);
+    //imshow("binaryImage", binaryImage);
     //erode(binaryImage, binaryImage, Mat(5, 5, CV_8U), Point(-1, -1), 4);
     //dilate(binaryImage, binaryImage, Mat(5, 5, CV_8U), Point(-1, -1), 2);
     //GaussianBlur(binaryImage, binaryImage, Size(3, 3), 0, 0);
@@ -148,8 +148,8 @@ Point2f LineTracker::watch() {
         }
     }
 
-    imshow("binaryImage_Copy", binaryImage);
-    imshow("Contours Image", imageContours); //轮廓
+    //imshow("binaryImage_Copy", binaryImage);
+    //imshow("Contours Image", imageContours); //轮廓
 
     //进行角点检测
     vector<Point2f> corners;
@@ -163,7 +163,7 @@ Point2f LineTracker::watch() {
     Mat img1, img2, img3, img4;
     mask = Mat::zeros(binaryImage.size(), CV_8UC1);
     mask(r1).setTo(255);
-    imshow("mask", mask);
+    //imshow("mask", mask);
 
 
     goodFeaturesToTrack(binaryImage, corners, 4, 0.01, 10, InputArray(mask), 3, false, 0.04);
@@ -263,7 +263,6 @@ Point2f LineTracker::watch() {
     //输出
     cout << "直线角度" << linesAver[0][3] << "\n直线角度" << linesAver[1][3] << endl;
     cout << pointFinal.x << "\t" << pointFinal.y << endl;
-    return pointFinal;
     //    message += "偏移" + to_string(offset_x) + "\t" + to_string(offset_y);
     //    message += "角度偏移" + to_string(offset_thetaA) + "\t角点数" + to_string(offset_thetaB);
 
@@ -287,4 +286,5 @@ Point2f LineTracker::watch() {
     int offset_thetaB = THETA_B - linesAver[1][3];
 
     imshow("1", srcImage);
+    return pointFinal;
 }

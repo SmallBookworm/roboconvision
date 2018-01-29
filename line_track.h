@@ -55,7 +55,7 @@ public:
     std::vector<cv::Vec4i> findLines(cv::Mat &binary);
 
     // Draw the detected lines on an image
-    void drawDetectedLines(cv::Mat &image, cv::Scalar color = cv::Scalar(255, 255, 255));
+    void drawDetectedLines(cv::Mat &image, cv::Scalar color);
 };
 
 class LineTracker {
@@ -71,7 +71,7 @@ public:
     }
 
 public:
-    bool my_cmp(cv::Vec4f a, cv::Vec4f b);
+    static bool my_cmp(cv::Vec4f a, cv::Vec4f b);
 
     float CauculateAngle(int a, int b);
 

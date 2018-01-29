@@ -19,7 +19,7 @@ int SignalWatcher::watch() {
         Mat srcImage;//定义一个srcImage变量，用于存储每一帧的图像
         capture >> srcImage;  //读取当前帧
         if (srcImage.empty())
-            throw "frame is empty";
+            throw "frame is empty\n";
 
         Mat Image_hsv;//临时变量和目标图的定义
         Mat dstImage(srcImage.size(), srcImage.type());
@@ -133,7 +133,7 @@ int SignalWatcher::watch() {
             }
         }
     } else {
-        throw "capture is closed";
+        throw "capture is closed\n";
     }
     return -1;
 }

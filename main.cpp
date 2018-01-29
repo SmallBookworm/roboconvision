@@ -11,15 +11,29 @@ int main() {
     VideoCapture capture0("/home/peng/文档/projectA/四色闪烁/002.avi");
     SignalWatcher watcher(capture0);
 
-    while (flag) {
+    VideoCapture capture1(0);
+    LineTracker lineTracker(capture1);
+
+    while (1) {
         //test1
-        int ff = watcher.watch();
-        if (ff != -1) {
-        cout<<ff<<endl;
+        try {
+            int ff = watcher.watch();
+            if (ff != -1) {
+                cout<<ff<<endl;
+            }
+        }catch (char const* error){
+            printf(error);
+            break;
         }
         //test2
+        if (flag){
+        lineTracker.watch();
+            flag=false;
+        }
+        //test3
         if (waitKey(1) == 27)
             break;
     }
+    waitKey(0);
     return 0;
 }
