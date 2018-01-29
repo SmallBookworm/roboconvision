@@ -18,8 +18,8 @@ int SignalWatcher::watch() {
     if (this->capture.isOpened()) {
         Mat srcImage;//定义一个srcImage变量，用于存储每一帧的图像
         capture >> srcImage;  //读取当前帧
-        if(srcImage.empty())
-            return  -1;
+        if (srcImage.empty())
+            throw "frame is empty";
 
         Mat Image_hsv;//临时变量和目标图的定义
         Mat dstImage(srcImage.size(), srcImage.type());
@@ -86,7 +86,6 @@ int SignalWatcher::watch() {
             //5.查找正外接矩形
             vector<Rect> boundRect(contours.size());
             for (int i = 0; i < contours.size(); i++) {
-
                 if (contours[i].capacity() > 100) {
                     boundRect[i] = boundingRect(contours[i]);
                     if (boundRect[i].height > 50 && boundRect[i].width > 50) {
@@ -133,6 +132,8 @@ int SignalWatcher::watch() {
                 }
             }
         }
+    } else {
+        throw "capture is closed";
     }
     return -1;
 }

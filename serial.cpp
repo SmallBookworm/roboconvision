@@ -144,7 +144,6 @@ void MySerial::nread(int fd, void *data, int datalength)   //读取串口信息
     if ((readlen = static_cast<int>(read(fd, data, datalength))) > 0) {
         printf("current condition is %s\n", data);
     }
-    return;
 }
 
 

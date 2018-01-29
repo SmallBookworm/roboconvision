@@ -1,38 +1,57 @@
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/ml/ml.hpp"
-#include <opencv2/videoio.hpp>
-#include <stdio.h>
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <string>
-
-#define PI 3.14159265358979323846
-#define POINT_X 0
-#define POINT_Y 0
-#define THETA_A 0
-#define THETA_B 90
+#include "line_track.h"
 
 using namespace std;
 using namespace cv;
 
-bool my_cmp(Vec4f a, Vec4f b) {
+// Set the resolution of the accumulator
+void LineFinder::setAccResolution(double dRho, double dTheta) {
+    deltaRho = dRho;
+    deltaTheta = dTheta;
+}
+
+// Set the minimum number of votes
+void LineFinder::setMinVote(int minv) {
+    minVote = minv;
+}
+
+// Set line length and gap
+void LineFinder::setLineLengthAndGap(double length, double gap) {
+    minLength = length;
+    maxGap = gap;
+}
+
+// Apply probabilistic Hough Transform
+std::vector<cv::Vec4i> LineFinder::findLines(cv::Mat &binary) {
+    lines.clear();
+    cv::HoughLinesP(binary, lines, deltaRho, deltaTheta, 5, minLength, maxGap);
+    return lines;
+}
+
+// Draw the detected lines on an image
+void LineFinder::drawDetectedLines(cv::Mat &image, cv::Scalar color = cv::Scalar(255, 255, 255)) {
+    // Draw the lines
+    std::vector<cv::Vec4i>::const_iterator it2 = lines.begin();
+    while (it2 != lines.end()) {
+        cv::Point pt1((*it2)[0], (*it2)[1]);
+        cv::Point pt2((*it2)[2], (*it2)[3]);
+        cv::line(image, pt1, pt2, color, 2);
+        ++it2;
+    }
+}
+
+bool LineTracker::my_cmp(Vec4f a, Vec4f b) {
     return abs(a[3]) < abs(b[3]);
 }
 
-float CauculateAngle(int a, int b) {
+float LineTracker::CauculateAngle(int a, int b) {
     if (b == 0) {
         return 90;
-    }
-    else {
-        return atan((float)a / (float)b) * 180 / PI;
+    } else {
+        return atan((float) a / (float) b) * 180 / PI;
     }
 }
 
-Vec2i GetPosition(std::vector<cv::Vec4f> lines) {
+Vec2i LineTracker::GetPosition(std::vector<cv::Vec4f> lines) {
     Vec2i point;
     double k1, k2, b1, b2;
 
@@ -42,87 +61,25 @@ Vec2i GetPosition(std::vector<cv::Vec4f> lines) {
         if (lines[1][1] == 0) {
             return NULL;
         }
-        point[1] = -1 * ((float)lines[1][2] + (float)lines[1][0] * (float)point[0]) / (float)lines[1][1];
-    }
-    else if (lines[1][1] == 0)//如果第二条直线斜率不存在
+        point[1] = -1 * ((float) lines[1][2] + (float) lines[1][0] * (float) point[0]) / (float) lines[1][1];
+    } else if (lines[1][1] == 0)//如果第二条直线斜率不存在
     {
-        point[0] = (float)-1 * (float)lines[1][2] / (float)lines[1][0];
+        point[0] = (float) -1 * (float) lines[1][2] / (float) lines[1][0];
         if (lines[0][1] == 0) {
             return NULL;
         }
-        point[1] = -1 * ((float)lines[0][2] + (float)lines[0][0] * (float)point[0]) / (float)lines[0][1];
-    }
-    else
-    {
-        point[1] = ((float)lines[0][2] * (float)lines[1][0] + (float)lines[1][2] * (float)lines[0][0])
-            / (float)(lines[0][0] * (float)lines[1][1] - (float)lines[0][1] * (float)lines[1][0]);
+        point[1] = -1 * ((float) lines[0][2] + (float) lines[0][0] * (float) point[0]) / (float) lines[0][1];
+    } else {
+        point[1] = ((float) lines[0][2] * (float) lines[1][0] + (float) lines[1][2] * (float) lines[0][0])
+                   / (float) (lines[0][0] * (float) lines[1][1] - (float) lines[0][1] * (float) lines[1][0]);
         //point[0] = (-1) * ((float)lines[0][2] - (float)lines[0][1] * (float)point[1]) / (float)lines[0][0];
-        point[0] = (-1) * ((float)lines[1][2] - (float)lines[1][1] * (float)point[1]) / (float)lines[1][0];
+        point[0] = (-1) * ((float) lines[1][2] - (float) lines[1][1] * (float) point[1]) / (float) lines[1][0];
     }
 
     return point;
 }
 
-class LineFinder
-{
-private:
-    cv::Mat img; // original image
-    std::vector<cv::Vec4i> lines;
-    double deltaRho;
-    double deltaTheta;
-    int minVote;
-
-    double minLength; // min length for a line
-    double maxGap; // max allowed gap along the line
-public:
-    // Default accumulator resolution is 1 pixel by 1 degree
-    // no gap, no mimimum length
-    LineFinder() : deltaRho(1),
-        deltaTheta(PI / 180),
-        minVote(10),
-        minLength(0.),
-        maxGap(0.) {}
-    // Set the resolution of the accumulator
-    void setAccResolution(double dRho, double dTheta)
-    {
-        deltaRho = dRho;
-        deltaTheta = dTheta;
-    }
-    // Set the minimum number of votes
-    void setMinVote(int minv)
-    {
-        minVote = minv;
-    }
-    // Set line length and gap
-    void setLineLengthAndGap(double length, double gap)
-    {
-        minLength = length;
-        maxGap = gap;
-    }
-    // Apply probabilistic Hough Transform
-    std::vector<cv::Vec4i> findLines(cv::Mat& binary)
-    {
-        lines.clear();
-        cv::HoughLinesP(binary, lines, deltaRho, deltaTheta, 5, minLength, maxGap);
-        return lines;
-    }
-    // Draw the detected lines on an image
-    void drawDetectedLines(cv::Mat &image, cv::Scalar color = cv::Scalar(255, 255, 255))
-    {
-        // Draw the lines
-        std::vector<cv::Vec4i>::const_iterator it2 = lines.begin();
-        while (it2 != lines.end())
-        {
-            cv::Point pt1((*it2)[0], (*it2)[1]);
-            cv::Point pt2((*it2)[2], (*it2)[3]);
-            cv::line(image, pt1, pt2, color, 2);
-            ++it2;
-        }
-    }
-};
-
-int main()
-{
+Point2f LineTracker::watch() {
     const char *pstrImageName = "1 0.bmp";//图片路径
     const char *pstrWindowsTitle = "直线检测";
 
@@ -150,27 +107,14 @@ int main()
 //    pCapture >> frame;
 //    imshow("show",frame);
 
-    VideoCapture cap(1);
-    if(!cap.isOpened())
-    {
-        return -1;
+    VideoCapture cap=this->capture;
+    if (!cap.isOpened()) {
+        throw "capture is closed";
     }
     Mat frame;
     Mat edges;
-    bool stop = false;
-        while(!stop)
-        {
-            cap>>frame;
-            //imshow("当前视频",frame);
-//            cvtColor(frame, edges, CV_BGR2GRAY);
-//            GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
-//            Canny(edges, edges, 0, 30, 3);
-            imshow("当前视频",frame);
-            if(waitKey(30) >=0)
-                stop = true;
-        }
-   // waitKey(0);
-    cap>>frame;
+
+    cap >> frame;
 
     Mat midImage;
     Mat srcImage = frame;//imread(pstrImageName);
@@ -192,17 +136,14 @@ int main()
     Mat binaryImage_Copy = binaryImage.clone();
     findContours(binaryImage_Copy, contour, hierarchy, CV_RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point());
     Mat imageContours = Mat::zeros(binaryImage_Copy.size(), CV_8UC1);
-    for (int i = 0;i<contour.size();i++)
-    {
+    for (int i = 0; i < contour.size(); i++) {
         //绘制轮廓
         if (contour[i].size() > minarea) {
             drawContours(imageContours, contour, i, Scalar(255), 2, 8, hierarchy);
             //!!!
             //drawContours(binaryImage, contour, i, Scalar(255), CV_FILLED, 8, hierarchy);
             //drawContours(imageContours, contour, i, Scalar(255), 2, 8, hierarchy);
-        }
-        else
-        {
+        } else {
             drawContours(binaryImage, contour, i, Scalar(0), CV_FILLED, 8, hierarchy);
         }
     }
@@ -218,11 +159,11 @@ int main()
     GaussianBlur(binaryImage, binaryImage, Size(3, 3), 0, 0);
 
     Mat mask;
-    Rect r1(20, 20,  binaryImage.cols-40, binaryImage.rows - 40);
+    Rect r1(20, 20, binaryImage.cols - 40, binaryImage.rows - 40);
     Mat img1, img2, img3, img4;
     mask = Mat::zeros(binaryImage.size(), CV_8UC1);
     mask(r1).setTo(255);
-    imshow("mask",mask);
+    imshow("mask", mask);
 
 
     goodFeaturesToTrack(binaryImage, corners, 4, 0.01, 10, InputArray(mask), 3, false, 0.04);
@@ -252,18 +193,15 @@ int main()
     //cv::Canny(image, contours, 155, 350);
 
     //第一种找直线方法
-    LineFinder finder;
-    // Set probabilistic Hough parameters
-    finder.setLineLengthAndGap(100, 20);
-    finder.setMinVote(10);
+    LineFinder finder=this->finder;
+
     // Detect lines and draw them
     std::vector<cv::Vec4i> lines = finder.findLines(imageContours);
     std::vector<cv::Vec4f> linesCount;//ax+by+c=0   第一位a，第二位是b，第三位是c，第四位是角度
     std::vector<cv::Vec4f> linesAver;//对相似的直线整合，然后求交点。
 
-    for (size_t i = 0; i < lines.size(); i++)
-    {
-        float a,b,c;
+    for (size_t i = 0; i < lines.size(); i++) {
+        float a, b, c;
         float angle;
         a = lines[i][3] - lines[i][1];
         b = lines[i][2] - lines[i][0];
@@ -278,9 +216,8 @@ int main()
     sort(linesCount.begin(), linesCount.end(), my_cmp);//排序
 
     int cursor = 0;
-    for (size_t i = 0; i < linesCount.size() - 1; i++)
-    {
-        if (abs(linesCount[i][3] - linesCount[i + 1][3]) > 3 )
+    for (size_t i = 0; i < linesCount.size() - 1; i++) {
+        if (abs(linesCount[i][3] - linesCount[i + 1][3]) > 3)
             break;
         else cursor++;
     }
@@ -289,8 +226,7 @@ int main()
     float b = 0;
     float c = 0;
     float angle = 0;
-    for (size_t i = 0; i < linesCount.size(); i++)
-    {
+    for (size_t i = 0; i < linesCount.size(); i++) {
         a += linesCount[i][0];
         b += linesCount[i][1];
         c += linesCount[i][2];
@@ -302,7 +238,7 @@ int main()
             b = b / (cursor + 1);
             c = c / (cursor + 1);
 
-            Vec4f temp(a , b , c, CauculateAngle(a,b));
+            Vec4f temp(a, b, c, CauculateAngle(a, b));
             linesAver.push_back(temp);
             a = 0;
             b = 0;
@@ -315,7 +251,7 @@ int main()
             b = b / (linesCount.size() - cursor - 1);
             c = c / (linesCount.size() - cursor - 1);
 
-            Vec4f temp(a, b, c , CauculateAngle(a ,b));
+            Vec4f temp(a, b, c, CauculateAngle(a, b));
             linesAver.push_back(temp);
             a = 0;
             b = 0;
@@ -325,8 +261,9 @@ int main()
     }
 
     //输出
-    cout<<"直线角度" << linesAver[0][3]<< "\n直线角度"<<linesAver[1][3]<<endl;
-    cout <<pointFinal.x<<"\t"<<pointFinal.y<<endl;
+    cout << "直线角度" << linesAver[0][3] << "\n直线角度" << linesAver[1][3] << endl;
+    cout << pointFinal.x << "\t" << pointFinal.y << endl;
+    return pointFinal;
     //    message += "偏移" + to_string(offset_x) + "\t" + to_string(offset_y);
     //    message += "角度偏移" + to_string(offset_thetaA) + "\t角点数" + to_string(offset_thetaB);
 
@@ -350,8 +287,4 @@ int main()
     int offset_thetaB = THETA_B - linesAver[1][3];
 
     imshow("1", srcImage);
-
-    cvWaitKey(0);
-
-    return 0;
 }
