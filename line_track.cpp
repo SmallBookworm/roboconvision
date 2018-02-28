@@ -79,7 +79,7 @@ Vec2i LineTracker::GetPosition(std::vector<cv::Vec4f> lines) {
     return point;
 }
 
-Point2f LineTracker::watch() {
+int LineTracker::watch(Point2f *point) {
     const char *pstrImageName = "1 0.bmp";//图片路径
     const char *pstrWindowsTitle = "直线检测";
 
@@ -107,16 +107,19 @@ Point2f LineTracker::watch() {
 //    pCapture >> frame;
 //    imshow("show",frame);
 
-    VideoCapture cap = this->capture;
+    VideoCapture cap(1);
     if (!cap.isOpened()) {
-        throw "capture is closed\n";
+        cerr << "capture is closed\n";
+        return -1;
     }
     Mat frame;
     Mat edges;
 
     cap >> frame;
-    if (frame.empty())
-        throw "frame is empty\n";
+    if (frame.empty()){
+        cerr << "frame is empty\n";
+        return -1;
+    }
     Mat midImage;
     Mat srcImage = frame;//imread(pstrImageName);
     resize(srcImage, srcImage, Size(srcImage.cols / 2, srcImage.rows / 2), 0, 0, INTER_LINEAR);
@@ -213,8 +216,10 @@ Point2f LineTracker::watch() {
             linesCount.push_back(temp);
         }
     }
-    if (linesCount.empty())
-        throw "linesCount is empty\n";
+    if (linesCount.empty()){
+        cerr << "linesCount is empty\n";
+        return -1;
+    }
     sort(linesCount.begin(), linesCount.end(), my_cmp);//排序
 
     int cursor = 0;
@@ -288,5 +293,7 @@ Point2f LineTracker::watch() {
     int offset_thetaB = THETA_B - linesAver[1][3];
 
     imshow("1", srcImage);
-    return pointFinal;
+    cap.release();
+    point = &pointFinal;
+    return 1;
 }

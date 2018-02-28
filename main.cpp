@@ -15,7 +15,7 @@ ClipWatcher clipWatcher;
 
 void printMes(int signo) {
     printf("Get a SIGALRM, signal NO:%d\n", signo);
-    VideoCapture capture0(0);
+    VideoCapture capture0(2);
     Mat frame;
     capture0 >> frame;
     bool ball = clipWatcher.watch(frame);
@@ -44,9 +44,7 @@ int main() {
     if (setitimer(ITIMER_REAL, &tick, NULL) < 0)
         printf("Set time fail!");
 
-
-    VideoCapture capture1(1);
-    LineTracker lineTracker(capture1);
+    LineTracker lineTracker;
 
     MySerial ms = MySerial();
     int fd = ms.open_port(1);
@@ -65,7 +63,8 @@ int main() {
         wdata[2] = 0;
         if ((rdata[8] & (1)) != 0) {
             wdata[2] |= 0x01;
-            Point2f point = lineTracker.watch();
+            Point2f point ;
+            lineTracker.watch(&point);
             short x = static_cast<short>(point.x);
             memcpy(wdata + 3, &x, sizeof(x));
             short y = static_cast<short>(point.y);
@@ -103,18 +102,12 @@ int main() {
     return 0;
 }
 
-void handlemesseage(struct itimerval &tick, LineTracker &lineTracker, char *rdata, MySerial &ms, int fd) {
-
-
-}
-
 void text() {
     bool flag = true;
     VideoCapture capture0("/home/peng/文档/projectA/四色闪烁/002.avi");
     SignalWatcher watcher(capture0);
 
-    VideoCapture capture1(0);
-    LineTracker lineTracker(capture1);
+    LineTracker lineTracker;
 
     while (true) {
         //test1
@@ -129,7 +122,8 @@ void text() {
         }
         //test2
         if (flag) {
-            lineTracker.watch();
+            Point2f point ;
+            lineTracker.watch(&point);
             flag = false;
         }
         //test3

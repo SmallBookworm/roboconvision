@@ -60,11 +60,9 @@ public:
 
 class LineTracker {
 private:
-    cv::VideoCapture capture;
     LineFinder finder;
 public:
-    explicit LineTracker(const cv::VideoCapture &capture) {
-        this->capture = capture;
+    explicit LineTracker() {
         // Set probabilistic Hough parameters
         this->finder.setLineLengthAndGap(100, 20);
         this->finder.setMinVote(10);
@@ -77,7 +75,7 @@ public:
 
     cv::Vec2i GetPosition(std::vector<cv::Vec4f> lines);
 
-    cv::Point2f watch();
+    int watch(cv::Point2f* point);
 };
 
 #endif //ROBOCONVISION_LINE_TRACK_H
