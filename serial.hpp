@@ -27,7 +27,7 @@ public:
 
     static int nwrite(int serialfd, const char *data, int datalength);
 
-    static void nread(int fd, void *data, int datalength);
+    static int nread(int fd, void *data, int datalength);
 };
 
 #endif

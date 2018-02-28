@@ -90,19 +90,19 @@ int MySerial::open_port(int comport)                 //通过参数，打开相�
     int fd = 0;
     if (comport == 1) {
         //O_RDWR读写模式 O_NOCTTY如果路径名指向终端设备,不要把这个设备用作控制终端 O_NDELAY表示不关心DCD信号所处的状态（端口的另一端是否激活或者停止）
-        fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
+        fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NONBLOCK);
         if (-1 == fd) {
             perror("Can't Open Serial /dev/ttyS0 Port");
             return (-1);
         }
     } else if (comport == 2) {
-        fd = open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY);
+        fd = open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NONBLOCK);
         if (-1 == fd) {
             perror("Can't Open Serial /dev/ttyS1 Port");
             return (-1);
         }
     } else if (comport == 3) {
-        fd = open("/dev/ttyS2", O_RDWR | O_NOCTTY | O_NDELAY);
+        fd = open("/dev/ttyS2", O_RDWR | O_NOCTTY | O_NONBLOCK);
         if (-1 == fd) {
             perror("Can't Open Serial /dev/ttyS2 Port");
             return (-1);
@@ -138,12 +138,13 @@ int MySerial::nwrite(int serialfd, const char *data, int datalength)  //写串�
     return (total_len);
 }
 
-void MySerial::nread(int fd, void *data, int datalength)   //读取串口信息
+int MySerial::nread(int fd, void *data, int datalength)   //读取串口信息
 {
     int readlen = 0;
     if ((readlen = static_cast<int>(read(fd, data, datalength))) > 0) {
         printf("current condition is %s\n", data);
     }
+    return readlen;
 }
 
 
