@@ -17,37 +17,37 @@ int MySerial::set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)  //
     bzero(&newtio, sizeof(newtio));
     newtio.c_cflag |= CLOCAL | CREAD;
     newtio.c_cflag &= ~CSIZE;
-    // switch( nBits )
-    // {
-    // case 7:
-    // 	newtio.c_cflag |= CS7;
-    // 	break;
-    // case 8:
-    // 	newtio.c_cflag |= CS8;
-    // 	break;
-    // }
+    switch (nBits) {
+        case 7:
+            newtio.c_cflag |= CS7;
+            break;
+        case 8:
+            newtio.c_cflag |= CS8;
+            break;
+        default:
+            fprintf(stderr, "Unsupported data size.\n");
+            return -1;
+    }
 
-    newtio.c_cflag = BAUDRATE | /*CRTSCTS |*/ CS8 /*| CLOCAL | CREAD */;
-    newtio.c_iflag = IGNPAR | ICRNL;
-    newtio.c_oflag = 0;
-    newtio.c_lflag = ICANON;
 
-    // switch( nEvent )
-    // {
-    // case 'O':
-    // 	newtio.c_cflag |= PARENB;
-    // 	newtio.c_cflag |= PARODD;
-    // 	newtio.c_iflag |= (INPCK | ISTRIP);
-    // 	break;
-    // case 'E':
-    // 	newtio.c_iflag |= (INPCK | ISTRIP);
-    // 	newtio.c_cflag |= PARENB;
-    // 	newtio.c_cflag &= ~PARODD;
-    // 	break;
-    // case 'N':
-    // 	newtio.c_cflag &= ~PARENB;
-    // 	break;
-    // }
+    switch (nEvent) {
+        case 'O':
+            newtio.c_cflag |= PARENB;
+            newtio.c_cflag |= PARODD;
+            newtio.c_iflag |= (INPCK | ISTRIP);
+            break;
+        case 'E':
+            newtio.c_iflag |= (INPCK | ISTRIP);
+            newtio.c_cflag |= PARENB;
+            newtio.c_cflag &= ~PARODD;
+            break;
+        case 'N':
+            newtio.c_cflag &= ~PARENB;
+            break;
+        default:
+            fprintf(stderr, "Unsupported parity.\n");
+            return -1;
+    }
 
     switch (nSpeed) {
         case 2400:
@@ -71,10 +71,20 @@ int MySerial::set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)  //
             cfsetospeed(&newtio, B9600);
             break;
     }
-    if (nStop == 1)
-        newtio.c_cflag &= ~CSTOPB;
-    else if (nStop == 2)
-        newtio.c_cflag |= CSTOPB;
+
+    switch (nStop) //设置停止位
+    {
+        case 1:
+            newtio.c_cflag &= ~CSTOPB;
+            break;
+        case 2:
+            newtio.c_cflag |= CSTOPB;
+            break;
+        default:
+            fprintf(stderr, "Unsupported stopbits.\n");
+            return -1;
+    }
+
     newtio.c_cc[VTIME] = 0;
     newtio.c_cc[VMIN] = 0;
     tcflush(fd, TCIFLUSH);
@@ -87,31 +97,31 @@ int MySerial::set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)  //
 
 int MySerial::open_port(int comport)                 //通过参数，打开相应的串口
 {
-    int fd = 0;
+    int fd;
     if (comport == 1) {
         //O_RDWR读写模式 O_NOCTTY如果路径名指向终端设备,不要把这个设备用作控制终端 O_NDELAY表示不关心DCD信号所处的状态（端口的另一端是否激活或者停止）
-        fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NONBLOCK);
+        fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);
         if (-1 == fd) {
             perror("Can't Open Serial /dev/ttyS0 Port");
             return (-1);
         }
     } else if (comport == 2) {
-        fd = open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NONBLOCK);
+        fd = open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);
         if (-1 == fd) {
             perror("Can't Open Serial /dev/ttyS1 Port");
             return (-1);
         }
     } else if (comport == 3) {
-        fd = open("/dev/ttyS2", O_RDWR | O_NOCTTY | O_NONBLOCK);
+        fd = open("/dev/ttyS2", O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);
         if (-1 == fd) {
             perror("Can't Open Serial /dev/ttyS2 Port");
             return (-1);
         }
     }
-    if (fcntl(fd, F_SETFL, 0) < 0)
-        perror("fcntl failed!");
-    else
-        printf("fcntl=%d\n", fcntl(fd, F_SETFL, 0));
+//    if (fcntl(fd, F_SETFL, 0) < 0)
+//        perror("fcntl failed!");
+//    else
+//        printf("fcntl=%d\n", fcntl(fd, F_SETFL, 0));
 
     if (isatty(STDIN_FILENO) == 0)
         perror("standard input is not a terminal device");

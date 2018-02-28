@@ -43,7 +43,7 @@ public:
     int iLowV1 = 60;
     int iHighV1 = 255;
 
-    explicit SignalWatcher(cv::VideoCapture capture) {
+    explicit SignalWatcher(const cv::VideoCapture &capture) {
         this->capture = capture;
     };
 public:

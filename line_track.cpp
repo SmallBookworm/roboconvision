@@ -115,7 +115,8 @@ Point2f LineTracker::watch() {
     Mat edges;
 
     cap >> frame;
-
+    if (frame.empty())
+        throw "frame is empty\n";
     Mat midImage;
     Mat srcImage = frame;//imread(pstrImageName);
     resize(srcImage, srcImage, Size(srcImage.cols / 2, srcImage.rows / 2), 0, 0, INTER_LINEAR);
@@ -212,7 +213,8 @@ Point2f LineTracker::watch() {
             linesCount.push_back(temp);
         }
     }
-
+    if (linesCount.empty())
+        throw "linesCount is empty\n";
     sort(linesCount.begin(), linesCount.end(), my_cmp);//排序
 
     int cursor = 0;

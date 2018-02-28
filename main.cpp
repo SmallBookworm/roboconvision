@@ -48,15 +48,17 @@ int main() {
     VideoCapture capture1(1);
     LineTracker lineTracker(capture1);
 
-//    string as = "123";
     MySerial ms = MySerial();
     int fd = ms.open_port(1);
-    fd = ms.set_opt(fd, BAUDRATE, 8, 'O', 0);
-//    ms.nwrite(fd, as.c_str(), as.length());
+    ms.set_opt(fd, BAUDRATE, 8, 'O', 1);
+    string data = "12345!";
+    ms.nwrite(fd, data.c_str(), data.length());
     while (true) {
+        //read message
         char rdata[13];
         int n = ms.nread(fd, rdata, 13);
         if (n != 13)continue;
+
         char wdata[17];
         wdata[0] = 'a';
         wdata[1] = 'b';
@@ -95,11 +97,15 @@ int main() {
             if (wdata[2] != 0)
                 ms.nwrite(fd, wdata, 17);
         }
-
         if (waitKey(1) == 27)
             break;
     }
     return 0;
+}
+
+void handlemesseage(struct itimerval &tick, LineTracker &lineTracker, char *rdata, MySerial &ms, int fd) {
+
+
 }
 
 void text() {

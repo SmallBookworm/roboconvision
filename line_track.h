@@ -63,7 +63,7 @@ private:
     cv::VideoCapture capture;
     LineFinder finder;
 public:
-    explicit LineTracker(cv::VideoCapture capture) {
+    explicit LineTracker(const cv::VideoCapture &capture) {
         this->capture = capture;
         // Set probabilistic Hough parameters
         this->finder.setLineLengthAndGap(100, 20);
