@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenCV REQUIRED)
 
-set(SOURCE_FILES main.cpp serial.hpp serial.cpp signal_change.h signal_change.cpp
-        line_track.h line_track.cpp ball_yn.h ball_yn.cpp)
+set(SOURCE_FILES main.cpp serial.cpp signal_change.cpp
+        line_track.cpp ball_yn.cpp)
 
 add_executable(roboconVision ${SOURCE_FILES})
 
