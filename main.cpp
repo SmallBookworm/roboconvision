@@ -6,10 +6,13 @@
 #include "serial.hpp"
 #include "ball_yn.h"
 
+#define ABUTMENT_MODE 0x1
+#define DROP_MODE 0x2
+
 using namespace std;
 using namespace cv;
 
-int state = 0;
+int state = 0x0;
 
 ClipWatcher clipWatcher;
 
@@ -22,7 +25,7 @@ void printMes(int signo) {
     char wdata[17];
     wdata[0] = 'a';
     wdata[1] = 'b';
-    wdata[2] = 0;
+    wdata[2] |= 0x02;
     if (ball)
         wdata[10] = 1;
     else
@@ -63,38 +66,39 @@ int main() {
         wdata[2] = 0;
         if ((rdata[8] & (1)) != 0) {
             wdata[2] |= 0x01;
-            Point2f point ;
+            Point2f point;
             lineTracker.watch(&point);
             short x = static_cast<short>(point.x);
             memcpy(wdata + 3, &x, sizeof(x));
             short y = static_cast<short>(point.y);
             memcpy(wdata + 4, &y, sizeof(y));
+            if (wdata[2] != 0)
+                ms.nwrite(fd, wdata, 17);
         }
 
         if ((rdata[8] & (1 << 1)) != 0) {
-            wdata[2] |= 0x02;
-            if (state != 1) {
-                state = 1;
+            if ((state & ABUTMENT_MODE) == 0) {
+                state |= ABUTMENT_MODE;
                 tick.it_value.tv_sec = 1;
                 tick.it_value.tv_usec = 0;
                 tick.it_interval.tv_sec = 1;
                 tick.it_interval.tv_usec = 0;
             }
-        } else if ((rdata[8] & (1 << 2)) != 0) {
+        } else if ((state & ABUTMENT_MODE) != 0) {
+            state ^= ABUTMENT_MODE;
+            tick.it_value.tv_sec = 0;
+            tick.it_value.tv_usec = 0;
+            tick.it_interval.tv_sec = 0;
+            tick.it_interval.tv_usec = 0;
+        }
+
+        if ((rdata[8] & (1 << 2)) != 0) {
             wdata[2] |= 0x08;
-            state = 2;
-            tick.it_value.tv_sec = 0;
-            tick.it_value.tv_usec = 0;
-            tick.it_interval.tv_sec = 0;
-            tick.it_interval.tv_usec = 0;
-        } else {
-            state = 0;
-            tick.it_value.tv_sec = 0;
-            tick.it_value.tv_usec = 0;
-            tick.it_interval.tv_sec = 0;
-            tick.it_interval.tv_usec = 0;
-            if (wdata[2] != 0)
-                ms.nwrite(fd, wdata, 17);
+            if ((state & DROP_MODE) == 0) {
+                state |= DROP_MODE;
+            }
+        } else if ((state & DROP_MODE) != 0) {
+            state ^= DROP_MODE;
         }
         if (waitKey(1) == 27)
             break;
@@ -122,7 +126,7 @@ void text() {
         }
         //test2
         if (flag) {
-            Point2f point ;
+            Point2f point;
             lineTracker.watch(&point);
             flag = false;
         }
