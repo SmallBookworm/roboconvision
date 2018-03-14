@@ -2,7 +2,7 @@
 #include <csignal>
 #include <sys/time.h>
 #include "signal_change.h"
-#include "line_track.h"
+#include "LineTracker.h"
 #include "serial.hpp"
 #include "ball_yn.h"
 
@@ -19,8 +19,16 @@ ClipWatcher clipWatcher;
 void printMes(int signo) {
     printf("Get a SIGALRM, signal NO:%d\n", signo);
     VideoCapture capture0(2);
+    if (!capture0.isOpened()) {
+        cerr << "capture is closed\n";
+        return;
+    }
     Mat frame;
     capture0 >> frame;
+    if (frame.empty()) {
+        cerr << "frame is empty\n";
+        return;
+    }
     bool ball = clipWatcher.watch(frame);
     char wdata[17];
     wdata[0] = 'a';
@@ -67,7 +75,18 @@ int main() {
         if ((rdata[8] & (1)) != 0) {
             wdata[2] |= 0x01;
             Point2f point;
-            lineTracker.watch(&point);
+            VideoCapture cap(1);
+            if (!cap.isOpened()) {
+                cerr << "capture is closed\n";
+                continue;
+            }
+            Mat frame;
+            cap >> frame;
+            if (frame.empty()) {
+                cerr << "frame is empty\n";
+                continue;
+            }
+            lineTracker.watch(frame, &point);
             short x = static_cast<short>(point.x);
             memcpy(wdata + 3, &x, sizeof(x));
             short y = static_cast<short>(point.y);
@@ -127,7 +146,18 @@ void text() {
         //test2
         if (flag) {
             Point2f point;
-            lineTracker.watch(&point);
+            VideoCapture cap(1);
+            if (!cap.isOpened()) {
+                cerr << "capture is closed\n";
+                continue;
+            }
+            Mat frame;
+            cap >> frame;
+            if (frame.empty()) {
+                cerr << "frame is empty\n";
+                continue;
+            }
+            lineTracker.watch(frame, &point);
             flag = false;
         }
         //test3
