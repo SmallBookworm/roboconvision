@@ -64,8 +64,8 @@ int main() {
     ms.nwrite(fd, data.c_str(), data.length());
     while (true) {
         //read message
-        char rdata[13];
-        int n = ms.nread(fd, rdata, 13);
+        char rdata[1];
+        int n = ms.nread(fd, rdata, 1);
         if (n != 13)continue;
 
         char wdata[17];

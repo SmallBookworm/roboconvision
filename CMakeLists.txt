@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(OpenCV REQUIRED)
 
 set(SOURCE_FILES main.cpp serial.cpp signal_change.cpp
-        LineTracker.cpp ball_yn.cpp LineFinder.cpp)
+        LineTracker.cpp ball_yn.cpp LineFinder.cpp Info.cpp Info.h)
 
 add_executable(roboconVision ${SOURCE_FILES})
 
