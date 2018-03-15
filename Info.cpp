@@ -18,16 +18,33 @@ int Info::push(char od) {
     } else {
         ableLength++;
     }
-    if (ableLength == this->inLength)
-        return 1;
+    if (ableLength == this->inLength) {
+        ableLength = 0;
+        int sumTest = getSum();
+        this->getData();
+        int sum = 0;
+        memcpy(&sum,result.meta.sum,sumNum);
+        if (sumTest == sum)
+            return 1;
+        else
+            return -1;
+    }
+
     return 0;
 }
 
-InMeta Info::getData() {
-    union In result{};
+void Info::getData() {
     vector<char>::iterator end = this->data.end();
     for (int i = 0; i < inLength; ++i) {
-    result.data[i]=*(end-i);
+        result.data[i] = *(end - i);
     }
-    return result.meta;
+}
+
+int Info::getSum() {
+    int res = 0;
+    vector<char>::iterator end = this->data.end();
+    for (int i = sumNum; i < inLength; ++i) {
+        res += *(end - i);
+    }
+    return res;
 }

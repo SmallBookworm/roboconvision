@@ -8,6 +8,7 @@
 #include "vector"
 #include <string.h>
 
+static const int sumNum = 4;
 struct InMeta {
     char head[2];
     char positionX[2];
@@ -17,10 +18,10 @@ struct InMeta {
     char flag2[1];
     char flag3[1];
     char flag4[1];
-    char sum[1];
+    char sum[sumNum];
 };
 union In {
-    char data[13];
+    char data[16];
     InMeta meta;
 };
 
@@ -34,10 +35,10 @@ struct OutMeta {
     char conectF2[1];
     char ringF1[1];
     char ringF2[1];
-    char sum[4];
+    char sum[sumNum];
 };
 union Out {
-    char data[17];
+    char data[19];
     OutMeta meta;
 };
 
@@ -46,12 +47,16 @@ private:
     std::vector<char> data;
     const char dataHead[3] = "ab";
     int ableLength = 0;
-    const int inLength = 13;
+    const int inLength = 16;
 public:
-    //0 continue,1 success
+    union In result{};
+
+    //-1 sum test fail,0 continue,1 success
     int push(char od);
 
-    InMeta getData();
+    int getSum();
+
+    void getData();
 
 };
 

@@ -4,6 +4,7 @@
 #include "signal_change.h"
 #include "LineTracker.h"
 #include "serial.hpp"
+#include "Info.h"
 #include "ball_yn.h"
 
 #define ABUTMENT_MODE 0x1
@@ -30,18 +31,19 @@ void printMes(int signo) {
         return;
     }
     bool ball = clipWatcher.watch(frame);
-    char wdata[17];
-    wdata[0] = 'a';
-    wdata[1] = 'b';
-    wdata[2] |= 0x02;
+    union Out wdata{};
+    fill_n(wdata.data, 17, 0);
+    wdata.meta.head[0] = 'a';
+    wdata.meta.head[1] = 'b';
+    wdata.meta.dataArea[0] |= 0x02;
     if (ball)
-        wdata[10] = 1;
+        wdata.meta.conectF2[0] = 1;
     else
-        wdata[10] = 0;
+        wdata.meta.conectF2[0] = 0;
     MySerial ms = MySerial();
     int fd = ms.open_port(1);
     fd = ms.set_opt(fd, BAUDRATE, 8, 'O', 0);
-    ms.nwrite(fd, wdata, 17);
+    ms.nwrite(fd, wdata.data, 17);
 }
 
 int main() {
@@ -62,18 +64,19 @@ int main() {
     ms.set_opt(fd, BAUDRATE, 8, 'O', 1);
     string data = "12345!";
     ms.nwrite(fd, data.c_str(), data.length());
+    Info info;
     while (true) {
         //read message
-        char rdata[1];
-        int n = ms.nread(fd, rdata, 1);
-        if (n != 13)continue;
+        char rdata;
+        int n = ms.nread(fd, &rdata, 1);
 
-        char wdata[17];
-        wdata[0] = 'a';
-        wdata[1] = 'b';
-        wdata[2] = 0;
-        if ((rdata[8] & (1)) != 0) {
-            wdata[2] |= 0x01;
+        if (info.push(rdata) > 0)continue;
+        union Out wdata{};
+        wdata.meta.head[0] = 'a';
+        wdata.meta.head[1] = 'b';
+        wdata.meta.dataArea[0] = 0;
+        if ((info.result.meta.flag1[0] & (1)) != 0) {
+            wdata.meta.dataArea[0] |= 0x01;
             Point2f point;
             VideoCapture cap(1);
             if (!cap.isOpened()) {
@@ -88,14 +91,14 @@ int main() {
             }
             lineTracker.watch(frame, &point);
             short x = static_cast<short>(point.x);
-            memcpy(wdata + 3, &x, sizeof(x));
+            memcpy(wdata.meta.positionX, &x, sizeof(x));
             short y = static_cast<short>(point.y);
-            memcpy(wdata + 4, &y, sizeof(y));
-            if (wdata[2] != 0)
-                ms.nwrite(fd, wdata, 17);
+            memcpy(wdata.meta.positionY, &y, sizeof(y));
+            if (wdata.meta.dataArea[0] != 0)
+                ms.nwrite(fd, wdata.data, 17);
         }
 
-        if ((rdata[8] & (1 << 1)) != 0) {
+        if ((info.result.meta.flag1[0] & (1 << 1)) != 0) {
             if ((state & ABUTMENT_MODE) == 0) {
                 state |= ABUTMENT_MODE;
                 tick.it_value.tv_sec = 1;
@@ -111,8 +114,8 @@ int main() {
             tick.it_interval.tv_usec = 0;
         }
 
-        if ((rdata[8] & (1 << 2)) != 0) {
-            wdata[2] |= 0x08;
+        if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
+            wdata.meta.dataArea[0] |= 0x08;
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
             }
