@@ -2,10 +2,21 @@
 // Created by peng on 18-3-14.
 //
 
+#include <iostream>
 #include "Info.h"
 
 using namespace std;
 
+void testSum(union Out* res) {
+    int value = 0;
+    for (int i = 0; i < sizeof(res->data)-sumNum; ++i) {
+        cout<<int(res->data[i])<<endl;
+        value += res->data[i];
+    }
+    res->meta.sum[0]='a';
+    //memcpy(res->meta.sum,&value,sumNum);
+    cout<<"value:"<<int(res->meta.head[0])<<"res:"<<res->meta.sum<<endl;
+}
 int Info::push(char od) {
     this->data.push_back(od);
     //test data head
@@ -24,6 +35,7 @@ int Info::push(char od) {
         this->getData();
         int sum = 0;
         memcpy(&sum,result.meta.sum,sumNum);
+        cout<<this->result.data<<endl;
         if (sumTest == sum)
             return 1;
         else

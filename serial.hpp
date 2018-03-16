@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#define BAUDRATE B9600//B115200//设置条码扫描仪的串口通讯波特率为115200BPS
+#define BAUDRATE 115200//B115200//设置条码扫描仪的串口通讯波特率为115200BPS
 #define COM2 "/dev/ttyUSB0"
 
 class MySerial {

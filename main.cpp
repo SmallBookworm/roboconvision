@@ -33,8 +33,6 @@ void printMes(int signo) {
     bool ball = clipWatcher.watch(frame);
     union Out wdata{};
     fill_n(wdata.data, 17, 0);
-    wdata.meta.head[0] = 'a';
-    wdata.meta.head[1] = 'b';
     wdata.meta.dataArea[0] |= 0x02;
     if (ball)
         wdata.meta.conectF2[0] = 1;
@@ -62,8 +60,12 @@ int main() {
     MySerial ms = MySerial();
     int fd = ms.open_port(1);
     ms.set_opt(fd, BAUDRATE, 8, 'O', 1);
-    string data = "12345!";
-    ms.nwrite(fd, data.c_str(), data.length());
+
+    union Out s{};
+    //ms.nwrite(fd, , OUTLENGTH);
+    testSum(&s);
+    cout<<s.data<<" length:"<<sizeof(s.data)<<endl;
+
     Info info;
     while (true) {
         //read message
