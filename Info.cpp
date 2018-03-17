@@ -10,12 +10,11 @@ using namespace std;
 void testSum(union Out* res) {
     int value = 0;
     for (int i = 0; i < sizeof(res->data)-sumNum; ++i) {
-        cout<<int(res->data[i])<<endl;
-        value += res->data[i];
+        unsigned char asone= static_cast<unsigned char>(res->data[i]);
+        value += asone;
     }
-    res->meta.sum[0]='a';
-    //memcpy(res->meta.sum,&value,sumNum);
-    cout<<"value:"<<int(res->meta.head[0])<<"res:"<<res->meta.sum<<endl;
+    memcpy(res->meta.sum,&value,sumNum);
+    //cout<<"value:"<<value<<"res:"<<res->meta.sum<<endl;
 }
 int Info::push(char od) {
     this->data.push_back(od);

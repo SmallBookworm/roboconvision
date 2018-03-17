@@ -32,7 +32,6 @@ void printMes(int signo) {
     }
     bool ball = clipWatcher.watch(frame);
     union Out wdata{};
-    fill_n(wdata.data, 17, 0);
     wdata.meta.dataArea[0] |= 0x02;
     if (ball)
         wdata.meta.conectF2[0] = 1;
@@ -41,7 +40,7 @@ void printMes(int signo) {
     MySerial ms = MySerial();
     int fd = ms.open_port(1);
     fd = ms.set_opt(fd, BAUDRATE, 8, 'O', 0);
-    ms.nwrite(fd, wdata.data, 17);
+    ms.nwrite(fd, wdata.data, sizeof(wdata.data));
 }
 
 int main() {
@@ -62,8 +61,8 @@ int main() {
     ms.set_opt(fd, BAUDRATE, 8, 'O', 1);
 
     union Out s{};
-    //ms.nwrite(fd, , OUTLENGTH);
     testSum(&s);
+    //ms.nwrite(fd, , OUTLENGTH);
     cout<<s.data<<" length:"<<sizeof(s.data)<<endl;
 
     Info info;
@@ -73,9 +72,8 @@ int main() {
         int n = ms.nread(fd, &rdata, 1);
 
         if (info.push(rdata) > 0)continue;
+
         union Out wdata{};
-        wdata.meta.head[0] = 'a';
-        wdata.meta.head[1] = 'b';
         wdata.meta.dataArea[0] = 0;
         if ((info.result.meta.flag1[0] & (1)) != 0) {
             wdata.meta.dataArea[0] |= 0x01;
@@ -97,7 +95,7 @@ int main() {
             short y = static_cast<short>(point.y);
             memcpy(wdata.meta.positionY, &y, sizeof(y));
             if (wdata.meta.dataArea[0] != 0)
-                ms.nwrite(fd, wdata.data, 17);
+                ms.nwrite(fd, wdata.data, sizeof(wdata.data));
         }
 
         if ((info.result.meta.flag1[0] & (1 << 1)) != 0) {

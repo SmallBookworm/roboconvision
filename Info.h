@@ -41,11 +41,11 @@ struct InMeta {
     char positionX[2];
     char positionY[2];
     char angle[2];
-    char flag1[1];
-    char flag2[1];
-    char flag3[1];
-    char flag4[1];
-    char sum[sumNum];
+    unsigned char flag1[1];
+    unsigned char flag2[1];
+    unsigned char flag3[1];
+    unsigned char flag4[1];
+    unsigned char sum[sumNum];
 };
 union In {
     char data[16];
@@ -55,9 +55,9 @@ union In {
 struct OutMeta {
     unsigned char head[2];
     unsigned char dataArea[1];
-     char positionX[2];
-     char positionY[2];
-     char angle[8];
+    char positionX[2];
+    char positionY[2];
+    char angle[8];
     unsigned char conectF1[1];
     unsigned char conectF2[1];
     unsigned char ringF1[1];
@@ -69,7 +69,7 @@ union Out {
     OutMeta meta{head:{static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)}};
 };
 
-void testSum(union Out* res);
+void testSum(union Out *res);
 
 class Info {
 private:

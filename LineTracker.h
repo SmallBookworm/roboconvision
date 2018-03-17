@@ -9,9 +9,19 @@
 #include <vector>
 #include "LineFinder.h"
 
-#define MaxtransLinesgap 150
-#define x_move 600
+#define PI 3.14159265358979323846
+#define mindiffer 15
+#define MaxtransLinesgap 130
+#define Maxdist 150
+#define x_move 500
 #define y_move 80
+#define paper_height 148.5
+#define paper_weight 210
+#define standard_picture_x 800
+#define standard_picture_y 176
+#define standard_real_x -1070   //第一次交接位置
+#define standard_real_y 6380    //第一次交接位置
+#define standard_angle 0.65
 
 class LineTracker {
 private:
