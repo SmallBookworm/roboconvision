@@ -10,18 +10,17 @@
 #include "LineFinder.h"
 
 #define PI 3.14159265358979323846
+#define standard_real_x -1210   //第一次交接位置 -620,8450
+#define standard_real_y 6355    //第一次交接位置
 #define mindiffer 15
-#define MaxtransLinesgap 130
-#define Maxdist 150
-#define x_move 500
-#define y_move 80
-#define paper_height 148.5
-#define paper_weight 210
-#define standard_picture_x 800
-#define standard_picture_y 176
-#define standard_real_x -1070   //第一次交接位置
-#define standard_real_y 6380    //第一次交接位置
-#define standard_angle 0.65
+#define Maxdist 130
+#define x_move 1500
+#define y_move 1050
+#define paper_height 100
+#define paper_weight 150
+#define standard_picture_x 718
+#define standard_picture_y 409
+#define standard_angle 0.2324
 
 class LineTracker {
 private:
@@ -53,9 +52,7 @@ public:
         return a[0] < b[0];
     }
 
-    float distance(cv::Vec2f pa, cv::Vec2f pb) {
-        return sqrt((pa[0] - pb[0]) * (pa[0] - pb[0]) + (pa[1] - pb[1]) * (pa[1] - pb[1]));
-    }
+    float distance(cv::Point2f pa, cv::Point2f pb);
 
     cv::Vec6f averLines(std::vector<cv::Vec6f> oneLine);
 
@@ -66,7 +63,7 @@ public:
     std::vector<std::vector<cv::Vec6f>> divideAngleLines(std::vector<cv::Vec6f> linesCount, float DValue, float cValue);
 
     std::vector<std::vector<cv::Vec6f>> divideLines(std::vector<cv::Vec6f> linesCount, int dataNmber, float DValue);
-
+//-1 fail 1 success
     int watch(cv::Mat &computerImage, cv::Point2f *point);
 };
 

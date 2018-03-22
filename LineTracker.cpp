@@ -7,6 +7,10 @@
 using namespace std;
 using namespace cv;
 
+float LineTracker::distance(cv::Point2f pa, cv::Point2f pb) {
+    return sqrt((pa.x - pb.x) * (pa.x - pb.x) + (pa.y - pb.y) * (pa.y - pb.y));
+}
+
 Vec6f LineTracker::averLines(vector<Vec6f> oneLine) {
     float a = 0;
     float b = 0;
@@ -146,53 +150,59 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
     //梯形矫正
     Mat perspectiveImage;
     perspectiveImage = Scalar::all(0);
+
     Point2f srcTri[4] = {Point2f(), Point2f(), Point2f(), Point2f()};
     Point2f dstTri[4];
     //左上
-    srcTri[0].x = 207;
-    srcTri[0].y = 36;
+    srcTri[0].x = 456;
+    srcTri[0].y = 283;
     //右上
-    srcTri[1].x = 826;
-    srcTri[1].y = 36;
+    srcTri[1].x = 796;
+    srcTri[1].y = 286;
     //左下
-    srcTri[2].x = 149;
-    srcTri[2].y = 453;
+    srcTri[2].x = 437;
+    srcTri[2].y = 507;
     //右下
-    srcTri[3].x = 852;
-    srcTri[3].y = 453;
+    srcTri[3].x = 804;
+    srcTri[3].y = 511;
+
     dstTri[0] = Point2f(x_move, y_move);
     dstTri[1] = Point2f(x_move + computerImage.cols, y_move);
     dstTri[2] = Point2f(x_move, y_move + computerImage.cols * paper_height / paper_weight);
     dstTri[3] = Point2f(x_move + computerImage.cols, y_move + computerImage.cols * paper_height / paper_weight);
     Mat transform = getPerspectiveTransform(dstTri, srcTri);
     //perspective.
-    warpPerspective(computerImage, perspectiveImage, transform, Size(computerImage.cols * 3, computerImage.rows * 3),
+    warpPerspective(computerImage, perspectiveImage, transform,
+                    Size(computerImage.cols * 3.2 + 200, computerImage.rows * 3.2 + 170),
                     INTER_LINEAR | WARP_INVERSE_MAP);
     Mat perspSmall = perspectiveImage.clone();
-    resize(perspectiveImage, perspSmall, Size(perspectiveImage.cols / 2, perspectiveImage.rows / 2), 0, 0,
+    resize(perspectiveImage, perspSmall, Size(perspectiveImage.cols / 3.2, perspectiveImage.rows / 3.2), 0, 0,
            INTER_LINEAR);
-    const float unit = (float)paper_weight / (float)perspSmall.cols;//换算单位
-    Mat imageROI = perspSmall(Rect(0,0,perspSmall.cols, perspSmall.rows - 455));
+    const float unit = (float) paper_weight / (float) 336;//换算单位
+    Mat imageROI = perspSmall(Rect(0, 0, perspSmall.cols, perspSmall.rows - 60));
+    Mat copy_imageROI = imageROI.clone();
     Mat binaryImage;
     Mat Gray;
     cvtColor(imageROI, Gray, CV_BGR2GRAY);
     GaussianBlur(Gray, Gray, Size(3, 3), 2, 2);
-    threshold(Gray, binaryImage, 80, 255, CV_THRESH_BINARY);
+    threshold(Gray, binaryImage, 78, 255, CV_THRESH_BINARY);
     const int elesize = 3;
     Mat element = getStructuringElement(MORPH_RECT, Size(elesize, elesize));
     morphologyEx(binaryImage, binaryImage, MORPH_CLOSE, element);
-
+    imshow("binaryImage", binaryImage);
     //求轮廓
     vector<vector<Point>> contour;
     vector<Vec4i> hierarchy;
-    //    double minarea = 100.0;
     Mat binaryImage_Copy = binaryImage.clone();
     findContours(binaryImage_Copy, contour, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point());
     Mat imageContours = Mat::zeros(binaryImage_Copy.size(), CV_8UC1);
     for (size_t i = 0; i < contour.size(); i++) {
+        if (contour[i].capacity() < 300) {
+            continue;
+        }
         drawContours(imageContours, contour, i, Scalar(255), 1, 8, hierarchy);
     }
-
+    imshow("imageContours", imageContours);
     Mat imageLines = Mat::zeros(imageContours.size(), CV_8UC1);
     LineFinder finder;
     vector<Vec4i> lines = finder.findLines(imageContours, imageLines);
@@ -230,18 +240,17 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
     Mat singleLine = perspSmall.clone();
 
     //45 < k <= 90 || -90 <= k < -45
-    vector<vector<Vec6f>> allLines = divideAngleLines(linesCount, 2, 2);
+    vector<vector<Vec6f>> allLines = divideAngleLines(linesCount, 3, 7);
     sort(allLines.begin(), allLines.end(), size_cmp);
     int maxL = 2;//每个角度区域线的最大数量
     int maxLA = 2;//角度区域的最大数量
-    maxLA= static_cast<int>(maxLA > allLines.size() ? allLines.size() : maxLA);
+    maxLA = static_cast<int>(maxLA > allLines.size() ? allLines.size() : maxLA);
     for (auto il = allLines.rbegin(); il < allLines.rbegin() + maxLA; il++) {
 
         vector<Vec6f> largeLine = *il;
         //divide again by x or y
         vector<vector<Vec6f>> oLines;
-        if (largeLine.back()[3] < 45 && largeLine.front()[3] > -45)
-        {
+        if (largeLine.back()[3] < 45 && largeLine.front()[3] > -45) {
             sort(largeLine.begin(), largeLine.end(), y_cmp);
             oLines = divideLines(largeLine, 5, 20);
         } else {
@@ -250,29 +259,36 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
         }
         sort(oLines.begin(), oLines.end(), size_cmp);
         reverse(oLines.begin(), oLines.end());
-        for (int j=0;(j<maxL)&&(j<oLines.size());j++) {
+        for (int j = 0; (j < maxL) && (j < oLines.size()); j++) {
             linesAver.push_back(averLines(oLines[j]));
         }
     }
     int i = 0;
-    if(abs((linesAver[i][3] + linesAver[i+1][3])/2) < abs((linesAver[i+2][3] + linesAver[i+3][3])/2))
-    {
-        cout <<" the small angle is: " << (linesAver[i][3] + linesAver[i+1][3]) / 2 << endl;
-        cout << "delta_angle is: " << (linesAver[i][3] + linesAver[i+1][3]) / 2 - standard_angle << endl;
+    if (linesAver.size() < 2 || linesAver.size() == 2) {
+        return -1;
+    }
+    if (linesAver.size() == 3) {
+        if (abs((linesAver[i][3] + linesAver[i + 1][3]) / 2) < abs(linesAver[i + 2][3])) {
+            cout << " the small angle is: " << (linesAver[i][3] + linesAver[i + 1][3]) / 2 << endl;
+            cout << "delta_angle is: " << (linesAver[i][3] + linesAver[i + 1][3]) / 2 - standard_angle << endl;
+        } else {
+            cout << " the small angle is: " << linesAver[i + 2][3] << endl;
+            cout << "delta_angle is: " << linesAver[i + 2][3] - standard_angle << endl;
+        }
+    }
+    if (abs((linesAver[i][3] + linesAver[i + 1][3]) / 2) < abs((linesAver[i + 2][3] + linesAver[i + 3][3]) / 2)) {
+        cout << " the small angle is: " << (linesAver[i][3] + linesAver[i + 1][3]) / 2 << endl;
+        cout << "delta_angle is: " << (linesAver[i][3] + linesAver[i + 1][3]) / 2 - standard_angle << endl;
 
+    } else {
+        cout << " the small angle is: " << (linesAver[i + 2][3] + linesAver[i + 3][3]) / 2 << endl;
+        cout << "delta_angle is: " << (linesAver[i + 2][3] + linesAver[i + 3][3]) / 2 - standard_angle << endl;
     }
-    else
-    {
-        cout <<" the small angle is: " << (linesAver[i+2][3] + linesAver[i+3][3]) / 2 << endl;
-        cout << "delta_angle is: " << (linesAver[i+2][3] + linesAver[i+3][3]) / 2 - standard_angle << endl;
-    }
-//画平均线
-    vector<Vec2f> PointGroup;
-    for (size_t i = 0; i < linesAver.size(); i++)
-    {
+    //画平均线
+    vector<Point2f> PointGroup;
+    for (size_t i = 0; i < linesAver.size(); i++) {
         drawLine(linesAver[i], singleLine);
-        for (size_t j = i + 1; j < linesAver.size(); j++)
-        {
+        for (size_t j = i + 1; j < linesAver.size(); j++) {
             float x = 0;
             float y = 0;
             x = (linesAver[i][1] * linesAver[j][2] - linesAver[j][1] * linesAver[i][2]) /
@@ -282,129 +298,135 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
             Point p;
             p.x = x;
             p.y = y;
-            if (isnan(y) || isnan(x) || (x > singleLine.cols) || (y > singleLine.rows) || (x <= 0.1) || (y <= 0.1))//去掉超出图像的数据
+            if (isnan(y) || isnan(x) || (x > singleLine.cols) || (y > singleLine.rows) || (x <= 0.1) ||
+                (y <= 0.1))//去掉超出图像的数据
             {
                 continue;
             }
             circle(singleLine, p, 3, Scalar(255, 255, 255));
-            Vec2f temp(x , y);
+            Vec2f temp(x, y);
             PointGroup.push_back(temp);
         }
     }
     sort(PointGroup.begin(), PointGroup.end(), px_cmp);
 
-    vector<vector<Vec2f>> allPoints;
-    vector<Vec2f> onePoint;
-    for (size_t k = 0; k < PointGroup.size(); k++)
-    {
+    vector<vector<Point2f>> allPoints;
+    vector<Point2f> onePoint;
+    for (size_t k = 0; k < PointGroup.size(); k++) {
         onePoint.clear();
-        Vec2f fourp_k(PointGroup[k][0], PointGroup[k][1]);
+        Vec2f fourp_k(PointGroup[k].x, PointGroup[k].y);
         onePoint.push_back(fourp_k);
-        for(size_t g = 0; g < PointGroup.size(); g++)
-        {
-            if(g == k)
-            {
+        for (size_t g = 0; g < PointGroup.size(); g++) {
+            if (g == k) {
                 continue;
             }
-            if(distance(PointGroup[k], PointGroup[g]) < Maxdist)
-            {
+            if (this->distance(PointGroup[k], PointGroup[g]) < Maxdist) {
                 onePoint.push_back(PointGroup[g]);
             }
         }
         allPoints.push_back(onePoint);
-        cout << onePoint.size() << endl;
     }
     int max = 0;
-    int index = 0;
-    for(int i = 0; i < allPoints.size(); i++)
-    {
-        if(allPoints[i].size() > max)
-        {
+    int index_max = 0;
+    for (int i = 0; i < allPoints.size(); i++) {
+        if (allPoints[i].size() > max) {
             max = allPoints[i].size();
-            index = i;
+            index_max = i;
         }
     }
-    for(int i = 0; i < max; i++)
+    int index = -1;
+    int index_copy;
+    bool flag = true;
+    for (int i_maxC = 0; i_maxC < allPoints.size(); i_maxC++) //为了max - 1 继续像max那样循环使用设置的循环
     {
-        Point p;
-        p.x = allPoints[index][i][0];
-        p.y = allPoints[index][i][1];
-        circle(singleLine, p, 3, Scalar(0, 255, 0));
+        for (int i_aP = 0; i_aP < allPoints.size(); i_aP++) {
+            if (allPoints[i_aP].size() == max) {
+                for (int i = 0; i < max; i++) {
+                    for (int j = i + 1; j < max; j++) {
+                        if (distance(allPoints[index_max][i], allPoints[index_max][j]) > Maxdist) {
+                            j = max;
+                            i = max;    //跳出两层循环
+                            flag = false;
+                            index_copy = index;
+                        }
+                    }
+                }
+                if (flag) {
+                    index = i_aP;
+                    i_aP = allPoints.size();
+                    i_maxC = allPoints.size();
+                }
+                flag = true;
+            }
+        }
+        if (index == index_copy)//如果index等于上一个index，即前面没有一个把i_aP赋给index的，所有集合里的点都不符合两两距离小于阈值
+        {
+            max--;
+        } else {
+            break;
+        }
+    }
+    for (int i_fits = 0; i_fits < allPoints[index].size(); i_fits++) {
+        circle(singleLine, allPoints[index][i_fits], 3, Scalar(150, 150, 155));
     }
     vector<Vec3f> threePts;
-    if (max == 0)
-    {
-        cout << "no point" << endl;
+    if (index == -1) {
         return -1;
-    }
-    else if (max == 1)
-    {
-        cout << "only one point, the point is: " << allPoints[index][0][0] << "\t" << "centerY is: " << allPoints[index][0][1] << endl;
+    } else if (max == 1) {
         return -1;
-    }
-    else if (max == 2)
-    {
-        cout << "only two points" << "the first is " << standard_real_x + (standard_picture_x - allPoints[index][0][0]) * unit << "," << standard_real_y + (standard_picture_y - allPoints[index][0][1]) * unit << endl;
-        cout << "the second is " << standard_real_x + (standard_picture_x - allPoints[index][1][0]) * unit << "," << standard_real_y + (standard_picture_y - allPoints[index][1][1]) * unit << endl;
+    } else if (max == 2) {
         return -1;
-    }
-    else if (max == 3)//如果只有三个点，预测中点，即斜边中点
+    } else if (max == 3)//如果只有三个点，预测中点，即斜边中点
     {
-        cout << "only three points" << "the first is " << standard_real_x + (standard_picture_x - allPoints[index][0][0]) * unit << "," << standard_real_y + (standard_picture_y - allPoints[index][0][1]) * unit << endl;
-        cout << "the second is " << standard_real_x + (standard_picture_x - allPoints[index][1][0]) * unit << "," << standard_real_y + (standard_picture_y - allPoints[index][1][1]) * unit << endl;
-        cout << "the third is " << standard_real_x + (standard_picture_x - allPoints[index][2][0]) * unit << "," << standard_real_y + (standard_picture_y - allPoints[index][2][1]) * unit << endl;
         float d = 0;
-        for(int one = 0; one < 3; one++)
-        {
-            for(int two = one + 1; two < 3; two++)
-            {
+        for (int one = 0; one < 3; one++) {
+            for (int two = one + 1; two < 3; two++) {
                 d = distance(allPoints[index][one], allPoints[index][two]);
                 Vec3f threep(d, one, two);
                 threePts.push_back(threep);
             }
         }
         float max_d;
-        if(threePts[0][0] > threePts[1][0])
-        {
+        if (threePts[0][0] > threePts[1][0]) {
             max_d = threePts[0][0];
-        }
-        else
-        {
+        } else {
             max_d = threePts[1][0];
         }
-        if(threePts[2][0] > max_d)
-        {
+        if (threePts[2][0] > max_d) {
             max_d = threePts[2][0];
         }
-        for(int b = 0; b < 3; b++)
-        {
-            if(max_d == threePts[b][0])
-            {
+        for (int b = 0; b < 3; b++) {
+            if (max_d == threePts[b][0]) {
+                int e = threePts[b][1];
+                int f = threePts[b][2];
                 Point center;
-                center.x = (allPoints[index][b][0] + allPoints[index][b][0]) / 2;
-                center.y = (allPoints[index][b][1] + allPoints[index][b][1]) / 2;
+                center.x = (allPoints[index][e].x + allPoints[index][f].x) / 2;
+                center.y = (allPoints[index][e].y + allPoints[index][f].y) / 2;
                 circle(singleLine, center, 3, Scalar(0, 0, 255));
-                cout << "the real centerX is: " << standard_real_x + (standard_picture_x - center.x) * unit << "\t" << "Y is: " << standard_real_y + (standard_picture_y - center.y) * unit << endl;
+                cout << "the real centerX is: " << standard_real_x + (standard_picture_y - center.y) * unit << "\t"
+                     << "Y is: " << standard_real_y + (center.x - standard_picture_x) * unit << endl;
+                cout << "the real centerX is: " << standard_real_x + (standard_picture_x - center.x) * unit << "\t"
+                     << "Y is: " << standard_real_y + (standard_picture_y - center.y) * unit << endl;
                 point->x = center.x;
                 point->y = center.y;
                 return 1;
             }
         }
-    }
-    else
-    {
+    } else {
         float x = 0;
         float y = 0;
-        for(int c = 0; c < max; c++)
-        {
-            x += allPoints[index][c][0];
-            y += allPoints[index][c][1];
+        for (int c = 0; c < max; c++) {
+            x += allPoints[index][c].x;
+            y += allPoints[index][c].y;
         }
         Point center;
         center.x = x / max;
         center.y = y / max;
         circle(singleLine, center, 3, Scalar(0, 0, 255));
-        cout << "the real centerX is: " << standard_real_x + (standard_picture_x - center.x) * unit << "\t" << "Y is: " << standard_real_y + (standard_picture_y - center.y) * unit << endl;
+        cout << "the real centerX is: " << standard_real_x + (standard_picture_y - center.y) * unit << "\t" << "Y is: "
+             << standard_real_y + (center.x - standard_picture_x) * unit << endl;
+        cout << "the real centerX is: " << standard_real_x + (standard_picture_x - center.x) * unit << "\t" << "Y is: "
+             << standard_real_y + (standard_picture_y - center.y) * unit << endl;
         point->x = center.x;
         point->y = center.y;
         return 1;
@@ -412,5 +434,5 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
     //test
     imshow("singleLine", singleLine);
     waitKey(0);
-
+    return 0;
 }
