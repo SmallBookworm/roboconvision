@@ -69,7 +69,7 @@ union Out {
     OutMeta meta{head:{static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)}};
 };
 
-void testSum(union Out *res);
+void assignSum(union Out *res);
 
 class Info {
 private:

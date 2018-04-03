@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void testSum(union Out* res) {
+void assignSum(union Out* res) {
     int value = 0;
     for (int i = 0; i < sizeof(res->data)-sumNum; ++i) {
         unsigned char asone= static_cast<unsigned char>(res->data[i]);

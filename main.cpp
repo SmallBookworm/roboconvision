@@ -7,7 +7,7 @@
 #include "Info.h"
 #include "ball_yn.h"
 
-#define ABUTMENT_MODE 0x1
+#define DOCKING_MODE 0x1
 #define DROP_MODE 0x2
 
 using namespace std;
@@ -15,55 +15,38 @@ using namespace cv;
 
 int state = 0x0;
 
-ClipWatcher clipWatcher;
+union Out wdata{};
+
+MySerial ms = MySerial();
+int fd;
 
 void printMes(int signo) {
-    printf("Get a SIGALRM, signal NO:%d\n", signo);
-    VideoCapture capture0(2);
-    if (!capture0.isOpened()) {
-        cerr << "capture is closed\n";
-        return;
-    }
-    Mat frame;
-    capture0 >> frame;
-    if (frame.empty()) {
-        cerr << "frame is empty\n";
-        return;
-    }
-    bool ball = clipWatcher.watch(frame);
-    union Out wdata{};
-    wdata.meta.dataArea[0] |= 0x02;
-    if (ball)
-        wdata.meta.conectF2[0] = 1;
-    else
-        wdata.meta.conectF2[0] = 0;
-    MySerial ms = MySerial();
-    int fd = ms.open_port(1);
-    fd = ms.set_opt(fd, BAUDRATE, 8, 'O', 0);
+    //printf("Get a SIGALRM, signal NO:%d\n", signo);
+    //sum flag
+    assignSum(&wdata);
     ms.nwrite(fd, wdata.data, sizeof(wdata.data));
+    //restore
+    wdata = {};
 }
 
 int main() {
+    fd = ms.open_port(1);
+    ms.set_opt(fd, BAUDRATE, 8, 'O', 1);
+
     struct itimerval tick;
     signal(SIGALRM, printMes);
     memset(&tick, 0, sizeof(tick));
-    tick.it_value.tv_sec = 0;
+    tick.it_value.tv_sec = 1;
     tick.it_value.tv_usec = 0;
-    tick.it_interval.tv_sec = 0;
+    tick.it_interval.tv_sec = 1;
     tick.it_interval.tv_usec = 0;
     if (setitimer(ITIMER_REAL, &tick, NULL) < 0)
         printf("Set time fail!");
 
     LineTracker lineTracker;
 
-    MySerial ms = MySerial();
-    int fd = ms.open_port(1);
-    ms.set_opt(fd, BAUDRATE, 8, 'O', 1);
-
     union Out s{};
-    testSum(&s);
-    //ms.nwrite(fd, , OUTLENGTH);
-    cout<<s.data<<" length:"<<sizeof(s.data)<<endl;
+    cout << s.data << " length:" << sizeof(s.data) << endl;
 
     Info info;
     while (true) {
@@ -71,10 +54,10 @@ int main() {
         char rdata;
         int n = ms.nread(fd, &rdata, 1);
 
-        if (info.push(rdata) > 0)continue;
+        if (info.push(rdata) <= 0)continue;
 
-        union Out wdata{};
         wdata.meta.dataArea[0] = 0;
+        //position(coordinate)
         if ((info.result.meta.flag1[0] & (1)) != 0) {
             wdata.meta.dataArea[0] |= 0x01;
             Point2f point;
@@ -94,26 +77,16 @@ int main() {
             memcpy(wdata.meta.positionX, &x, sizeof(x));
             short y = static_cast<short>(point.y);
             memcpy(wdata.meta.positionY, &y, sizeof(y));
-            if (wdata.meta.dataArea[0] != 0)
-                ms.nwrite(fd, wdata.data, sizeof(wdata.data));
         }
-
+        //Docking mode
         if ((info.result.meta.flag1[0] & (1 << 1)) != 0) {
-            if ((state & ABUTMENT_MODE) == 0) {
-                state |= ABUTMENT_MODE;
-                tick.it_value.tv_sec = 1;
-                tick.it_value.tv_usec = 0;
-                tick.it_interval.tv_sec = 1;
-                tick.it_interval.tv_usec = 0;
+            if ((state & DOCKING_MODE) == 0) {
+                state |= DOCKING_MODE;
             }
-        } else if ((state & ABUTMENT_MODE) != 0) {
-            state ^= ABUTMENT_MODE;
-            tick.it_value.tv_sec = 0;
-            tick.it_value.tv_usec = 0;
-            tick.it_interval.tv_sec = 0;
-            tick.it_interval.tv_usec = 0;
+        } else if ((state & DOCKING_MODE) != 0) {
+            state ^= DOCKING_MODE;
         }
-
+        //Drop mode
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
             wdata.meta.dataArea[0] |= 0x08;
             if ((state & DROP_MODE) == 0) {

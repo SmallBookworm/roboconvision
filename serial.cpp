@@ -140,7 +140,7 @@ int MySerial::nwrite(int serialfd, const char *data, int datalength)  //写串�
     //len = write(serialfd, &data[total_len], datalength - total_len);
     for (int i = 0; i < datalength; i++) {
         len += write(serialfd, &data[i], 1);
-        usleep(1000);
+        //usleep(1000);
     }
 //         if (len > 0) 
 //             total_len += len;          
