@@ -1,11 +1,9 @@
 #include <iostream>
 #include <csignal>
 #include <sys/time.h>
-#include "signal_change.h"
 #include "LineTracker.h"
 #include "serial.hpp"
 #include "Info.h"
-#include "ball_yn.h"
 #include "ball_tracker.h"
 
 #define DOCKING_MODE 0x1
@@ -113,46 +111,4 @@ int main() {
             break;
     }
     return 0;
-}
-
-void text() {
-    bool flag = true;
-    VideoCapture capture0("/home/peng/文档/projectA/四色闪烁/002.avi");
-    SignalWatcher watcher(capture0);
-
-    LineTracker lineTracker;
-
-    while (true) {
-        //test1
-        try {
-            int ff = watcher.watch();
-            if (ff != -1) {
-                cout << ff << endl;
-            }
-        } catch (char const *error) {
-            printf(error);
-            break;
-        }
-        //test2
-        if (flag) {
-            Point2f point;
-            VideoCapture cap(1);
-            if (!cap.isOpened()) {
-                cerr << "capture is closed\n";
-                continue;
-            }
-            Mat frame;
-            cap >> frame;
-            if (frame.empty()) {
-                cerr << "frame is empty\n";
-                continue;
-            }
-            lineTracker.watch(frame, &point);
-            flag = false;
-        }
-        //test3
-        if (waitKey(1) == 27)
-            break;
-    }
-    waitKey(0);
 }
