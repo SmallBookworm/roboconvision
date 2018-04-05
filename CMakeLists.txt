@@ -6,8 +6,9 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(OpenCV REQUIRED)
 
 set(SOURCE_FILES main.cpp serial.cpp signal_change.cpp
-        LineTracker.cpp ball_yn.cpp LineFinder.cpp Info.cpp Info.h)
+        LineTracker.cpp ball_yn.cpp LineFinder.cpp Info.cpp Info.h
+        ball_tracker.cpp cv-helpers.hpp ring_watcher.cpp)
 
 add_executable(roboconVision ${SOURCE_FILES})
 
-target_link_libraries(roboconVision ${OpenCV_LIBS})
+target_link_libraries(roboconVision ${OpenCV_LIBS} realsense2 pthread)

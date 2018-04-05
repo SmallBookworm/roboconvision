@@ -6,6 +6,7 @@
 #include "serial.hpp"
 #include "Info.h"
 #include "ball_yn.h"
+#include "ball_tracker.h"
 
 #define DOCKING_MODE 0x1
 #define DROP_MODE 0x2
@@ -48,6 +49,7 @@ int main() {
     //union Out s{};
     //cout << s.data << " length:" << sizeof(s.data) << endl;
 
+    promise<int> * dropProm= nullptr;
     Info info;
     while (true) {
         //read message
@@ -96,9 +98,16 @@ int main() {
             wdata.meta.dataArea[0] |= 0x08;
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
+                delete dropProm;
+                dropProm=new promise<int>;
+                future<int> fut = (*dropProm).get_future();
+                Tracker tracker;
+                thread thread1(tracker, ref(fut));
+                thread1.detach();
             }
         } else if ((state & DROP_MODE) != 0) {
             state ^= DROP_MODE;
+            (*dropProm).set_value(10);
         }
         if (waitKey(1) == 27)
             break;
