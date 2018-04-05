@@ -29,7 +29,7 @@ int MySerial::set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)  //
             return -1;
     }
 
-
+/*设置奇偶校验位*/
     switch (nEvent) {
         case 'O':
             newtio.c_cflag |= PARENB;
@@ -131,7 +131,7 @@ int MySerial::open_port(int comport)                 //通过参数，打开相�
     return fd;
 }
 
-int MySerial::nwrite(int serialfd, const char *data, int datalength)  //写串口信息
+int MySerial::nwrite(int serialfd, const unsigned char *data, int datalength)  //写串口信息
 {
     int len = 0, total_len = 0;
     // for (total_len = 0 ; total_len < datalength;) 
@@ -151,9 +151,11 @@ int MySerial::nwrite(int serialfd, const char *data, int datalength)  //写串�
 int MySerial::nread(int fd, void *data, int datalength)   //读取串口信息
 {
     int readlen = 0;
-    if ((readlen = static_cast<int>(read(fd, data, datalength))) > 0) {
-        printf("current condition is %s\n", data);
-    }
+    readlen = static_cast<int>(read(fd, data, datalength));
+//    if (readlen> 0) {
+//        char *q= static_cast<char *>(data);
+//        printf("current condition is %d\n", int(*q));
+//    }
     return readlen;
 }
 

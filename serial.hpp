@@ -25,7 +25,7 @@ public:
 
     static int open_port(int comport);
 
-    static int nwrite(int serialfd, const char *data, int datalength);
+    static int nwrite(int serialfd, const unsigned char *data, int datalength);
 
     static int nread(int fd, void *data, int datalength);
 };

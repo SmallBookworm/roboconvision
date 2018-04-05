@@ -9,8 +9,6 @@
 #include <string.h>
 #include <stdint.h>
 
-#define OUTLENGTH 24
-#define INLENGTH 16
 static const int sumNum = 4;
 
 //typedef union {
@@ -38,9 +36,9 @@ static const int sumNum = 4;
 
 struct InMeta {
     unsigned char head[2];
-    char positionX[2];
-    char positionY[2];
-    char angle[2];
+    unsigned char positionX[2];
+    unsigned char positionY[2];
+    unsigned char angle[2];
     unsigned char flag1[1];
     unsigned char flag2[1];
     unsigned char flag3[1];
@@ -48,16 +46,17 @@ struct InMeta {
     unsigned char sum[sumNum];
 };
 union In {
-    char data[16];
-    InMeta meta{head:{static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)}};
+    unsigned char data[16];
+    InMeta meta{};
 };
 
 struct OutMeta {
     unsigned char head[2];
     unsigned char dataArea[1];
-    char positionX[2];
-    char positionY[2];
-    char angle[8];
+    unsigned char placeHold[1];
+    unsigned char positionX[2];
+    unsigned char positionY[2];
+    unsigned char angle[4];
     unsigned char conectF1[1];
     unsigned char conectF2[1];
     unsigned char ringF1[1];
@@ -65,7 +64,7 @@ struct OutMeta {
     unsigned char sum[sumNum];
 };
 union Out {
-    char data[19];
+    unsigned char data[20];
     OutMeta meta{head:{static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)}};
 };
 
@@ -73,15 +72,15 @@ void assignSum(union Out *res);
 
 class Info {
 private:
-    std::vector<char> data;
-    const char dataHead[3] = "ab";
+    std::vector<unsigned char> data;
+    const unsigned char dataHead[2] = {static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)};
     int ableLength = 0;
     const int inLength = 16;
 public:
     union In result{};
 
     //-1 sum test fail,0 continue,1 success
-    int push(char od);
+    int push(unsigned char od);
 
     int getSum();
 

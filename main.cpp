@@ -31,7 +31,7 @@ void printMes(int signo) {
 
 int main() {
     fd = ms.open_port(1);
-    ms.set_opt(fd, BAUDRATE, 8, 'O', 1);
+    ms.set_opt(fd, BAUDRATE, 8, 'N', 1);
 
     struct itimerval tick;
     signal(SIGALRM, printMes);
@@ -45,21 +45,24 @@ int main() {
 
     LineTracker lineTracker;
 
-    union Out s{};
-    cout << s.data << " length:" << sizeof(s.data) << endl;
+    //union Out s{};
+    //cout << s.data << " length:" << sizeof(s.data) << endl;
 
     Info info;
     while (true) {
         //read message
-        char rdata;
+        unsigned char rdata;
         int n = ms.nread(fd, &rdata, 1);
-
+        //sometime read nothing
+        if (n <= 0)
+            continue;
+        //cout << int(rdata) << endl;
+        //cout << info.result.data << " length:" << sizeof(info.result.data) << endl;
         if (info.push(rdata) <= 0)continue;
 
         wdata.meta.dataArea[0] = 0;
         //position(coordinate)
         if ((info.result.meta.flag1[0] & (1)) != 0) {
-            wdata.meta.dataArea[0] |= 0x01;
             Point2f point;
             VideoCapture cap(1);
             if (!cap.isOpened()) {
@@ -77,6 +80,8 @@ int main() {
             memcpy(wdata.meta.positionX, &x, sizeof(x));
             short y = static_cast<short>(point.y);
             memcpy(wdata.meta.positionY, &y, sizeof(y));
+            //valid data
+            wdata.meta.dataArea[0] |= 0x01;
         }
         //Docking mode
         if ((info.result.meta.flag1[0] & (1 << 1)) != 0) {

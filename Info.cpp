@@ -7,19 +7,20 @@
 
 using namespace std;
 
-void assignSum(union Out* res) {
+void assignSum(union Out *res) {
     int value = 0;
-    for (int i = 0; i < sizeof(res->data)-sumNum; ++i) {
-        unsigned char asone= static_cast<unsigned char>(res->data[i]);
+    for (int i = 0; i < sizeof(res->data) - sumNum; ++i) {
+        unsigned char asone = static_cast<unsigned char>(res->data[i]);
         value += asone;
     }
-    memcpy(res->meta.sum,&value,sumNum);
+    memcpy(res->meta.sum, &value, sumNum);
     //cout<<"value:"<<value<<"res:"<<res->meta.sum<<endl;
 }
-int Info::push(char od) {
+
+int Info::push(unsigned char od) {
     this->data.push_back(od);
     //test data head
-    if (this->ableLength < strlen(dataHead)) {
+    if (this->ableLength < sizeof(dataHead)) {
         if (od == dataHead[ableLength])
             ableLength++;
         else
@@ -33,8 +34,8 @@ int Info::push(char od) {
         int sumTest = getSum();
         this->getData();
         int sum = 0;
-        memcpy(&sum,result.meta.sum,sumNum);
-        cout<<this->result.data<<endl;
+        memcpy(&sum, result.meta.sum, sumNum);
+        cout << this->result.data << endl;
         if (sumTest == sum)
             return 1;
         else
@@ -45,17 +46,17 @@ int Info::push(char od) {
 }
 
 void Info::getData() {
-    vector<char>::iterator end = this->data.end();
-    for (int i = 0; i < inLength; ++i) {
-        result.data[i] = *(end - i);
+    auto end = this->data.end();
+    for (int i = 1; i <= inLength; ++i) {
+        result.data[inLength-i] = *(end - i);
     }
 }
 
 int Info::getSum() {
     int res = 0;
-    vector<char>::iterator end = this->data.end();
-    for (int i = sumNum; i < inLength; ++i) {
-        res += *(end - i);
+    for (auto end = this->data.rbegin() + sumNum; end < this->data.rend(); ++end) {
+        int a = *end;
+        res += a;
     }
     return res;
 }
