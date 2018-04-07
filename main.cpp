@@ -47,7 +47,8 @@ int main() {
     //union Out s{};
     //cout << s.data << " length:" << sizeof(s.data) << endl;
 
-    promise<int> * dropProm= nullptr;
+    promise<int> *dropProm = nullptr;
+    DeviationPosition position;
     Info info;
     while (true) {
         //read message
@@ -93,16 +94,24 @@ int main() {
         }
         //Drop mode
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
-            wdata.meta.dataArea[0] |= 0x08;
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
                 delete dropProm;
-                dropProm=new promise<int>;
+                dropProm = new promise<int>;
                 future<int> fut = (*dropProm).get_future();
                 Tracker tracker;
-                thread thread1(tracker, ref(fut));
+                thread thread1(tracker, ref(fut), ref(position));
                 thread1.detach();
             }
+            Point2f ballPoint;
+            int res = position.getPoint(ballPoint);
+            if (res >= 0) {
+                wdata.meta.dataArea[0] |= 0x04;
+                wdata.meta.ringF1[0] = static_cast<unsigned char>(res);
+                memcpy(wdata.meta.ballDX, &ballPoint.x, sizeof(ballPoint.x));
+                memcpy(wdata.meta.ballDY, &ballPoint.y, sizeof(ballPoint.y));
+            }
+
         } else if ((state & DROP_MODE) != 0) {
             state ^= DROP_MODE;
             (*dropProm).set_value(10);

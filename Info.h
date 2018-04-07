@@ -53,18 +53,20 @@ union In {
 struct OutMeta {
     unsigned char head[2];
     unsigned char dataArea[1];
-    unsigned char placeHold[1];
+    //unsigned char placeHold[1];
     unsigned char positionX[2];
     unsigned char positionY[2];
     unsigned char angle[4];
-    unsigned char conectF1[1];
-    unsigned char conectF2[1];
+    unsigned char dockDModule[4];
+    unsigned char dockArgument[4];
+    unsigned char dockRAngle[4];
     unsigned char ringF1[1];
-    unsigned char ringF2[1];
+    unsigned char ballDX[4];
+    unsigned char ballDY[4];
     unsigned char sum[sumNum];
 };
 union Out {
-    unsigned char data[20];
+    unsigned char data[36];
     OutMeta meta{head:{static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)}};
 };
 
