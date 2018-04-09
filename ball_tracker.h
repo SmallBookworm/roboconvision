@@ -9,7 +9,6 @@
 #define HANGLE (64.0 / 180 * M_PI)
 #define VANGLE (41.0 / 180 * M_PI)
 
-#include<thread>
 #include <iostream>
 #include <zconf.h>
 #include <future>

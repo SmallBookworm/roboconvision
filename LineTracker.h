@@ -9,7 +9,6 @@
 #include <vector>
 #include "LineFinder.h"
 
-#define PI 3.14159265358979323846
 #define standard_real_x -1210   //第一次交接位置 -620,8450
 #define standard_real_y 6355    //第一次交接位置
 #define mindiffer 15

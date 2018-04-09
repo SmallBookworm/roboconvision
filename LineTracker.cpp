@@ -38,7 +38,7 @@ Vec6f LineTracker::averLines(vector<Vec6f> oneLine) {
 
         return Vec6f(a, b, c, angle, x, y);
     } else {
-        angle = atan(-a / b) * 180 / PI;
+        angle = atan(-a / b) * 180 / M_PI;
         x = -1 * (c / a);
         y = -1 * (c / b);
 
@@ -142,7 +142,7 @@ float LineTracker::CalculateAngle(float a, float b) {
     if (b == 0) {
         return 90;
     } else {
-        return atan(-a / b) * 180 / PI;
+        return atan(-a / b) * 180 / M_PI;
     }
 }
 
