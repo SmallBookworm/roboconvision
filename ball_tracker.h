@@ -9,6 +9,7 @@
 #define HANGLE (64.0 / 180 * M_PI)
 #define VANGLE (41.0 / 180 * M_PI)
 
+#include<thread>
 #include <iostream>
 #include <zconf.h>
 #include <future>
@@ -22,7 +23,7 @@ public:
     Tracker();
 
     //define operator()
-    int operator()(std::future<int> &fut, DeviationPosition &position);
+    int operator()(DeviationPosition &position);
 
     int test();
 

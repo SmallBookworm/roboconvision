@@ -49,7 +49,6 @@ int main() {
     //union Out s{};
     //cout << s.data << " length:" << sizeof(s.data) << endl;
 
-    promise<int> *dropProm = nullptr;
     DeviationPosition position;
     LineInfo lineInfo;
     Info info;
@@ -112,12 +111,9 @@ int main() {
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
-                delete dropProm;
-                dropProm = new promise<int>;
-                //bug
-                future<int> fut = (*dropProm).get_future();
+                position.init();
                 Tracker tracker;
-                thread thread1(tracker, ref(fut), ref(position));
+                thread thread1(tracker, ref(position));
                 thread1.detach();
             }
             Point2f ballPoint;
@@ -131,7 +127,7 @@ int main() {
 
         } else if ((state & DROP_MODE) != 0) {
             state ^= DROP_MODE;
-            (*dropProm).set_value(10);
+            position.setStop(true);
         }
         if (waitKey(1) == 27)
             break;
