@@ -40,9 +40,7 @@ struct InMeta {
     unsigned char positionY[2];
     unsigned char angle[2];
     unsigned char flag1[1];
-    unsigned char flag2[1];
-    unsigned char flag3[1];
-    unsigned char flag4[1];
+    unsigned char placeHold[3];
     unsigned char sum[sumNum];
 };
 union In {
@@ -53,7 +51,7 @@ union In {
 struct OutMeta {
     unsigned char head[2];
     unsigned char dataArea[1];
-    //unsigned char placeHold[1];
+    unsigned char placeHold1[1];
     unsigned char positionX[2];
     unsigned char positionY[2];
     unsigned char angle[4];
@@ -61,12 +59,13 @@ struct OutMeta {
     unsigned char dockArgument[4];
     unsigned char dockRAngle[4];
     unsigned char ringF1[1];
+    unsigned char placeHold2[3];
     unsigned char ballDX[4];
     unsigned char ballDY[4];
     unsigned char sum[sumNum];
 };
 union Out {
-    unsigned char data[36];
+    unsigned char data[40];
     OutMeta meta{head:{static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)}};
 };
 

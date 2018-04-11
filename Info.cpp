@@ -35,6 +35,7 @@ int Info::push(unsigned char od) {
         this->getData();
         int sum = 0;
         memcpy(&sum, result.meta.sum, sumNum);
+        //test
         cout << this->result.data << endl;
         if (sumTest == sum)
             return 1;
@@ -48,7 +49,7 @@ int Info::push(unsigned char od) {
 void Info::getData() {
     auto end = this->data.end();
     for (int i = 1; i <= inLength; ++i) {
-        result.data[inLength-i] = *(end - i);
+        result.data[inLength - i] = *(end - i);
     }
 }
 
