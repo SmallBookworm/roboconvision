@@ -298,7 +298,7 @@ int LineTest::watch(cv::Mat src) {
     split(record, mv);
     //mv[2] 红 mv[1] 绿 mv[0] 蓝
     //得到差异图像，转为黑白
-    GetDiffImage(mv[0], mv[1], dst,4);
+    GetDiffImage(mv[0], mv[1], dst, 4);
     //先膨胀，后腐蚀（联通区域）
     cv::dilate(dst, pBinary, elementC);
     cv::erode(pBinary, dst, elementC);
@@ -306,25 +306,27 @@ int LineTest::watch(cv::Mat src) {
     lines = findCorner(dst);
     vector<float> data;
     if (lines.size() == 4) {
-        Scalar sca=Scalar(0, 0, 255);
+        Scalar sca = Scalar(0, 0, 255);
         drawDetectLines(src, lines, sca);
-        data=analyse(src,all_line, left_line, right_line, left2_line, right2_line, lines);
-        cout << "angle: " <<data[0] << endl;
-        cout << "vectRadian: " << data[1] << endl;
-        cout << "vectLength: " << data[2] << endl;
-    }
-    else if (lines.size() < 4) {
-        cout << "invalid " << lines.size() << endl;
-    }
-    else if (lines.size() > 4) {
-        cout << "invalid " << lines.size() << endl;
+        data = analyse(src, all_line, left_line, right_line, left2_line, right2_line, lines);
+        //cout << "angle: " << data[0] << endl;
+        //cout << "vectRadian: " << data[1] << endl;
+        //cout << "vectLength: " << data[2] << endl;
+    } else if (lines.size() < 4) {
+        //cout << "invalid " << lines.size() << endl;
+    } else if (lines.size() > 4) {
+        //cout << "invalid " << lines.size() << endl;
     }
     return static_cast<int>(lines.size());
 }
 
 int LineTest::operator()(LineInfo &info) {
-    VideoCapture capture;
-    capture.open("/home/peng/下载/realse/1.avi");
+
+    VideoCapture capture(1);
+    //capture.open("/home/peng/下载/realse/1.avi");
+    capture.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
+    capture.set(CV_CAP_PROP_EXPOSURE, -11);
 
     Mat srcImage;
     if (!capture.isOpened()) {
@@ -334,6 +336,7 @@ int LineTest::operator()(LineInfo &info) {
 
     bool status = info.getStop();
     while (!status) {
+
         capture >> srcImage;
         if (!capture.isOpened() || srcImage.empty())
             break;
@@ -342,6 +345,9 @@ int LineTest::operator()(LineInfo &info) {
         //cout << size << endl;
         if (size == 4) {
             info.set(info_value);
+        } else{
+            float a[3]{100,2,3};
+            info.set(a);
         }
         //test
         imshow("show", srcImage);

@@ -37,10 +37,10 @@ int main() {
     struct itimerval tick;
     signal(SIGALRM, printMes);
     memset(&tick, 0, sizeof(tick));
-    tick.it_value.tv_sec = 1;
-    tick.it_value.tv_usec = 0;
-    tick.it_interval.tv_sec = 1;
-    tick.it_interval.tv_usec = 0;
+    tick.it_value.tv_sec = 0;
+    tick.it_value.tv_usec = 50000;
+    tick.it_interval.tv_sec = 0;
+    tick.it_interval.tv_usec = 50000;
     if (setitimer(ITIMER_REAL, &tick, NULL) < 0)
         printf("Set time fail!");
 
@@ -62,12 +62,11 @@ int main() {
         //cout << int(rdata) << endl;
         //cout << info.result.data << " length:" << sizeof(info.result.data) << endl;
         if (info.push(rdata) <= 0)continue;
-
-        wdata.meta.dataArea[0] = 0;
+        //wdata.meta.dataArea[0] = 0;
         //position(coordinate)
         if ((info.result.meta.flag1[0] & (1)) != 0) {
             Point2f point;
-            VideoCapture cap(1);
+            VideoCapture cap(2);
             if (!cap.isOpened()) {
                 cerr << "capture is closed\n";
                 continue;
@@ -86,6 +85,7 @@ int main() {
             //valid data
             wdata.meta.dataArea[0] |= 0x01;
         }
+        cout << (info.result.meta.flag1[0] & (1 << 1)) << endl;
         //Docking mode
         if ((info.result.meta.flag1[0] & (1 << 1)) != 0) {
             if ((state & DOCKING_MODE) == 0) {
@@ -98,6 +98,7 @@ int main() {
             float res[3];
             int resF = lineInfo.get(res);
             if (resF > 0) {
+                cout << res << endl;
                 wdata.meta.dataArea[0] |= 0x02;
                 memcpy(wdata.meta.dockDModule, &res[0], sizeof(res[0]));
                 memcpy(wdata.meta.dockArgument, &res[1], sizeof(res[0]));
