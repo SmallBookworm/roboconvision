@@ -22,9 +22,9 @@ private:
 
     float AngleCalculate(float rleft, float rright);
 
-    std::vector<cv::Vec4i> findCorner(cv::Mat dst, cv::Mat src);
+    std::vector<cv::Vec4i> findCorner(cv::Mat dst);
 
-    void analyse(LinesOption all_line, LinesOption left_line, LinesOption right_line, LinesOption left_line2,
+    std::vector<float> analyse(cv::Mat paint,LinesOption all_line, LinesOption left_line, LinesOption right_line, LinesOption left_line2,
                  LinesOption right_line2, std::vector<cv::Vec4i> lines);
 
     void drawDetectLines(cv::Mat &image, const std::vector<cv::Vec4i> &lines, cv::Scalar &color);
