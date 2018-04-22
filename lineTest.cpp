@@ -321,12 +321,26 @@ int LineTest::watch(cv::Mat src) {
 }
 
 int LineTest::operator()(LineInfo &info) {
+    //system("v4l2-ctl --set-ctrl=exposure_auto=1 -d /dev/video1");
 
     VideoCapture capture(1);
     //capture.open("/home/peng/下载/realse/1.avi");
-    capture.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
-    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
-    capture.set(CV_CAP_PROP_EXPOSURE, -11);
+    int fd = open("/dev/video1", O_RDWR);
+    if (fd >= 0) {
+        struct v4l2_control ctrl;
+        ctrl.id = V4L2_CID_EXPOSURE_AUTO;
+        ctrl.value = V4L2_EXPOSURE_MANUAL;
+        int ret = ioctl(fd, VIDIOC_S_CTRL, &ctrl);
+
+        struct v4l2_control ctrl1;
+        ctrl1.id = V4L2_CID_EXPOSURE_ABSOLUTE;
+        ctrl1.value=50;
+        ret = ioctl(fd, VIDIOC_S_CTRL, &ctrl1);
+        if (ret < 0) {
+            printf("Get exposure failed (%d)\n", ret);
+        } else
+            printf("\nGet Exposure :[%d]\n", ctrl1.value);
+    }
 
     Mat srcImage;
     if (!capture.isOpened()) {
@@ -345,8 +359,8 @@ int LineTest::operator()(LineInfo &info) {
         //cout << size << endl;
         if (size == 4) {
             info.set(info_value);
-        } else{
-            float a[3]{100,2,3};
+        } else {
+            float a[3]{100, 2, 3};
             info.set(a);
         }
         //test

@@ -7,6 +7,9 @@
 
 #include "linesOption.h"
 #include "lineInfo.h"
+#include <fcntl.h>
+#include <linux/videodev2.h>
+#include<sys/ioctl.h>
 
 class LineTest {
 private:
