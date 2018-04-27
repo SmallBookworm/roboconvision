@@ -112,7 +112,7 @@ int main() {
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
-                position.init();
+                position.init(Vec3f(0,0,0));
                 Tracker tracker;
                 thread thread1(tracker, ref(position));
                 thread1.detach();
