@@ -90,7 +90,7 @@ int main() {
             //valid data
             wdata.meta.dataArea[0] |= 0x01;
         }
-        cout << "Docking mode" << (info.result.meta.flag1[0] & (1 << 1)) << endl;
+        //cout << "Docking mode" << (info.result.meta.flag1[0] & (1 << 1)) << endl;
         //Docking mode
         if ((info.result.meta.flag1[0] & (1 << 1)) != 0) {
             if ((state & DOCKING_MODE) == 0) {
@@ -113,7 +113,7 @@ int main() {
             state ^= DOCKING_MODE;
             lineInfo.setStop(true);
         }
-        cout << "Drop mode" << (info.result.meta.flag1[0] & (1 << 2)) << endl;
+        //cout << "Drop mode" << (info.result.meta.flag1[0] & (1 << 2)) << endl;
         //Drop mode
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
             if ((state & DROP_MODE) == 0) {
@@ -131,10 +131,9 @@ int main() {
 
         } else if ((state & DROP_MODE) != 0) {
             state ^= DROP_MODE;
+            cout<<">?"<<endl;
             position.await();
         }
-        if (waitKey(1) == 27)
-            break;
     }
     return 0;
 }
