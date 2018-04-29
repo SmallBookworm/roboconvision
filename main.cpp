@@ -85,7 +85,7 @@ int main() {
             //valid data
             wdata.meta.dataArea[0] |= 0x01;
         }
-        cout << (info.result.meta.flag1[0] & (1 << 1)) << endl;
+        cout << "Docking mode" << (info.result.meta.flag1[0] & (1 << 1)) << endl;
         //Docking mode
         if ((info.result.meta.flag1[0] & (1 << 1)) != 0) {
             if ((state & DOCKING_MODE) == 0) {
@@ -108,11 +108,12 @@ int main() {
             state ^= DOCKING_MODE;
             lineInfo.setStop(true);
         }
+        cout << "Drop mode" << (info.result.meta.flag1[0] & (1 << 2)) << endl;
         //Drop mode
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
-                position.init(Vec3f(0,0,0));
+                position.init(Vec3f(0, 0, 0));
                 Tracker tracker;
                 thread thread1(tracker, ref(position));
                 thread1.detach();
