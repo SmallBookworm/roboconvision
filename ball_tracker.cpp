@@ -158,7 +158,7 @@ cv::Vec3f Tracker::getCircleCoordinate(cv::Vec4f circle, cv::Vec3f info, int wWi
     coordinate[1] = static_cast<float>(info[2] * tan(VANGLE / 2) * (wHeight / 2 - circle[1]) /
                                        (wHeight / 2));
     //change coordinate system
-    float c1=coordinate[1],c2=coordinate[2];
+    float c1 = coordinate[1], c2 = coordinate[2];
     coordinate[1] = static_cast<float>(cos(SENSEANGLE) * c1 + sin(SENSEANGLE) * c2);
     coordinate[2] = static_cast<float>(cos(SENSEANGLE) * c2 - sin(SENSEANGLE) * c1);
     return coordinate;
@@ -697,6 +697,9 @@ int Tracker::operator()(DeviationPosition &position) try {
     namedWindow(window_name, WINDOW_AUTOSIZE);
     bool status = position.getStop();
     while (!status) {
+        status = position.getStop();
+        if (position.getStby())
+            continue;
         rs2::frameset data = pipe.wait_for_frames(); // Wait for next set of frames from the camera
         rs2::depth_frame depthFrame = data.get_depth_frame();
         rs2::frame depth = color_map(depthFrame);
@@ -778,12 +781,11 @@ int Tracker::operator()(DeviationPosition &position) try {
         // Update the window with new data
         //test
         imshow(window_name, image);
-        if(frameI<30)
-            imwrite("/home/peng/文档/test/"+to_string(frameI)+".jpg", image);
+        if (frameI < 30)
+            imwrite("/home/peng/文档/test/" + to_string(frameI) + ".jpg", image);
         if (waitKey(1) == 27)
             break;
 
-        status = position.getStop();
     };
 
     return EXIT_SUCCESS;

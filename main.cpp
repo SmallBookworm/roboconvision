@@ -50,6 +50,11 @@ int main() {
     //cout << s.data << " length:" << sizeof(s.data) << endl;
 
     DeviationPosition position;
+    position.await();
+    Tracker tracker;
+    thread thread1(tracker, ref(position));
+    thread1.detach();
+
     LineInfo lineInfo;
     Info info;
     while (true) {
@@ -114,9 +119,6 @@ int main() {
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
                 position.init(Vec3f(0, 0, 0));
-                Tracker tracker;
-                thread thread1(tracker, ref(position));
-                thread1.detach();
             }
             Point2f ballPoint;
             int res = position.getPoint(ballPoint);
@@ -129,7 +131,7 @@ int main() {
 
         } else if ((state & DROP_MODE) != 0) {
             state ^= DROP_MODE;
-            position.setStop(true);
+            position.await();
         }
         if (waitKey(1) == 27)
             break;
