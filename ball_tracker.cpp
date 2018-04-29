@@ -293,7 +293,7 @@ Tracker::getBall(std::vector<std::vector<cv::Point>> contours, Mat &resultImage,
             cDepth = depth;
             realC = coor;
             minI = true;
-        } else if (circle[3] < minC[3]) {
+        } else if (circle[3] > minC[3]) {
             minC = circle;
             cSize = contour.size();
             cDepth = depth;
