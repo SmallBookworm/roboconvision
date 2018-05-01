@@ -23,12 +23,18 @@ private:
 
     float rad(float ang);
 
+    float angleProcessor(float newNum);//今日新加 5.1
+
+    float xProcessor(float newNum);//5.1
+
+    float yProcessor(float newNum);//5.1
+
     float AngleCalculate(float rleft, float rright);
 
     std::vector<cv::Vec4i> findCorner(cv::Mat dst);
 
-    std::vector<float> analyse(cv::Mat paint,LinesOption all_line, LinesOption left_line, LinesOption right_line, LinesOption left_line2,
-                 LinesOption right_line2, std::vector<cv::Vec4i> lines);
+    std::vector<float> analyse(cv::Mat paint, LinesOption all_line, LinesOption left_line, LinesOption right_line,
+                               std::vector<cv::Vec4i> lines);
 
     void drawDetectLines(cv::Mat &image, const std::vector<cv::Vec4i> &lines, cv::Scalar &color);
 
@@ -36,9 +42,11 @@ public:
     LinesOption all_line;
     LinesOption left_line;
     LinesOption right_line;
-    LinesOption left2_line;
-    LinesOption right2_line;
     float info_value[3]{0};
+    int num = 0;
+    std::vector<float> angleRecord;
+    std::vector<float> xRecord;
+    std::vector<float> yRecord;
 public:
     int watch(cv::Mat res);
 

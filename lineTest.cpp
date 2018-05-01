@@ -47,6 +47,100 @@ float LineTest::rad(float ang) {
     return (float) ang * M_PI / (float) 180;
 }
 
+float LineTest::angleProcessor(float newNum) {
+    float ca = 0;
+    int zeroNum = 0;
+    int otherNum = 0;
+    if (angleRecord.size()< 10) {
+        angleRecord.push_back(newNum);
+    }
+    else {
+        num = num % 10;
+        angleRecord[num] = newNum;
+        num++;
+    }
+    for (int o = 0; o < angleRecord.size(); o++) {
+        if (angleRecord[o] == 0) {
+            zeroNum++;
+        }
+        else {
+            otherNum++;
+        }
+    }
+    if (zeroNum > otherNum) {
+        return 0;
+    }
+    else {
+        for (int o = 0; o < angleRecord.size(); o++) {
+            ca = angleRecord[o] + ca;
+        }
+        ca = ca / angleRecord.size();
+        return ca;
+    }
+}
+float LineTest::xProcessor(float newNum) {
+    float ca = 0;
+    int zeroNum = 0;
+    int otherNum = 0;
+    if (xRecord.size()< 10) {
+        xRecord.push_back(newNum);
+    }
+    else {
+        num = num % 10;
+        xRecord[num] = newNum;
+        num++;
+    }
+    for (int o = 0; o < xRecord.size(); o++) {
+        if (xRecord[o] == 0) {
+            zeroNum++;
+        }
+        else {
+            otherNum++;
+        }
+    }
+    if (zeroNum > otherNum) {
+        return 0;
+    }
+    else {
+        for (int o = 0; o < xRecord.size(); o++) {
+            ca = xRecord[o] + ca;
+        }
+        ca = ca / xRecord.size();
+        return ca;
+    }
+}
+float LineTest::yProcessor(float newNum) {
+    float ca = 0;
+    int zeroNum = 0;
+    int otherNum = 0;
+    if (yRecord.size()< 10) {
+        yRecord.push_back(newNum);
+    }
+    else {
+        num = num % 10;
+        yRecord[num] = newNum;
+        num++;
+    }
+    for (int o = 0; o < yRecord.size(); o++) {
+        if (yRecord[o] == 0) {
+            zeroNum++;
+        }
+        else {
+            otherNum++;
+        }
+    }
+    if (zeroNum > otherNum) {
+        return 0;
+    }
+    else {
+        for (int o = 0; o < yRecord.size(); o++) {
+            ca = yRecord[o] + ca;
+        }
+        ca = ca / yRecord.size();
+        return ca;
+    }
+}
+
 float LineTest::AngleCalculate(float rleft, float rright) {
     float radian = asinf((float) (rleft - rright) / (float) SREAL_WIDTH);
     float angle = (float) radian * 180 / (float) M_PI;
@@ -62,7 +156,8 @@ vector<Vec4i> LineTest::findCorner(Mat dst) {
     for (int i = 0; i < contours.size(); i++) {
         Point2f P[4];
 
-        if (contours[i].capacity() > 300) {
+        if (contours[i].capacity() > 50) //change according to fps
+        {
             Vec4i leftLine;
             Vec4i rightLine;
             int averageRightDownY = 0;
@@ -164,15 +259,15 @@ vector<Vec4i> LineTest::findCorner(Mat dst) {
                     }
                     if (tempLow1 > P[j].x) {
                         leftLine[2] = tempLow1 + 1;
-                        leftLine[3] = averageLeftUpY;//左上
+                        leftLine[3] = averageLeftUpY+2;//左上
                         rightLine[2] = P[j].x - 1;
-                        rightLine[3] = averageRightUpY;//右上
+                        rightLine[3] = averageRightUpY+2;//右上
                     }
                     if (tempLow1 < P[j].x) {
                         rightLine[2] = tempLow1 + 1;
-                        rightLine[3] = averageLeftUpY;//左上
+                        rightLine[3] = averageLeftUpY+2;//左上
                         leftLine[2] = P[j].x -1;
-                        leftLine[3] = averageRightUpY;//右上
+                        leftLine[3] = averageRightUpY+2;//右上
                     }
                 }
             }
@@ -186,7 +281,7 @@ vector<Vec4i> LineTest::findCorner(Mat dst) {
 }
 
 vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption left_line, LinesOption right_line,
-                                LinesOption left_line2, LinesOption right_line2, vector<Vec4i> lines) {
+                                vector<Vec4i> lines) {
 
     vector<float> all_data;
     float pix_left_height = left_line.pixheight(0, lines);
@@ -221,12 +316,9 @@ vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption lef
         float x = data1[0];
         float *data2 = locateToLocate.ptr<float>(0);
         float y = data1[1];
-        float vectRadian = atan2f(y, x);
-        float vectAngle = 180*(float)vectRadian/(float)M_PI;
-        float vectLength = sqrtf(powf(x, 2) + powf(y, 2));
         all_data.push_back(angle);
-        all_data.push_back(vectAngle);
-        all_data.push_back(vectLength);
+        all_data.push_back(x);
+        all_data.push_back(y);
     }
     if (pix_right_height - pix_left_height > 2) {
         float real_delta_x = (float) SREAL_HEIGHT * ((float) rightToCenter / (float) right_line.pixheight(3, lines) -
@@ -248,12 +340,9 @@ vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption lef
         float x = data1[0];
         float *data2 = locateToLocate.ptr<float>(0);
         float y = data1[1];
-        float vectRadian = atan2f(y, x);
-        float vectAngle = 180*(float)vectRadian/(float)M_PI;
-        float vectLength = sqrtf(powf(x, 2) + powf(y, 2));
         all_data.push_back(angle);
-        all_data.push_back(vectAngle);
-        all_data.push_back(vectLength);
+        all_data.push_back(x);
+        all_data.push_back(y);
     }
     if (abs(pix_left_height - pix_right_height) <= 2) {
         radian = 0;
@@ -277,13 +366,15 @@ vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption lef
         float x = data1[0];
         float *data2 = locateToLocate.ptr<float>(0);
         float y = data1[1];
-        float vectRadian = atan2f(y, x);
-        float vectAngle = 180*(float)vectRadian/(float)M_PI;
-        float vectLength = sqrtf(powf(x, 2) + powf(y, 2));
         all_data.push_back(angle);
-        all_data.push_back(vectAngle);
-        all_data.push_back(vectLength);
+        all_data.push_back(x);
+        all_data.push_back(y);
     }
+    /*调参数用*/
+//    all_data.push_back(pix_left_height);
+//    all_data.push_back(pix_right_height);
+//    all_data.push_back(leftToCenter);
+//    all_data.push_back(rightToCenter);
     namedWindow("final", 0);
     imshow("final", paint);
     return all_data;
@@ -309,7 +400,6 @@ int LineTest::watch(cv::Mat src) {
     Mat elementE = getStructuringElement(MORPH_RECT, Size(9, 9));
     Mat elementC = getStructuringElement(MORPH_RECT, Size(3, 3));
     vector<vector<float>> dateRecord;
-    int num = 0;
 
     //亮度调整
     src.convertTo(record, -1, 0.1, 0);
@@ -324,16 +414,40 @@ int LineTest::watch(cv::Mat src) {
     //得到角点
     lines = findCorner(dst);
     vector<float> data;
+    vector<float> data_filter1;
+    vector<float> data_final;
     if (lines.size() == 4) {
         Scalar sca = Scalar(0, 0, 255);
         drawDetectLines(src, lines, sca);
-        data = analyse(src, all_line, left_line, right_line, left2_line, right2_line, lines);
-        cout << "angle: " << data[0] << endl;
-        cout << "vectRadian: " << data[1] << endl;
-        cout << "vectLength: " << data[2] << endl;
-        info_value[0]=data[2];
-        info_value[1]=data[1];
-        info_value[2]=data[0];
+        data = analyse(src, all_line, left_line, right_line, lines);
+        if (abs(data[0]) < angleThreshold)
+        {
+            data[0] = 0;
+        }
+        if (abs(data[1]) < xThreshold)
+        {
+            data[1] = 0;
+        }
+        if (abs(data[2]) < yThreshold)
+        {
+            data[2] = 0;
+        }
+        data_filter1.push_back(angleProcessor(data[0]));
+        data_filter1.push_back(xProcessor(data[1]));
+        data_filter1.push_back(yProcessor(data[2]));
+        float vectRadian = atan2f(data_filter1[2], data_filter1[1]);
+        float vectAngle = 180 * vectRadian / (float)M_PI;
+        float vectLength = sqrtf(powf(data_filter1[1], 2) + powf(data_filter1[2], 2));
+        data_final.push_back(data_filter1[0]);
+        data_final.push_back(vectAngle);
+        data_final.push_back(vectLength);
+
+        cout << "angle: " << data_final[0] << endl;
+        cout << "vectAngle: " << data_final[1] << endl;
+        cout << "vectLength: " << data_final[2] << endl;
+        info_value[0]=data_final[2];
+        info_value[1]=data_final[1];
+        info_value[2]=data_final[0];
     } else if (lines.size() < 4) {
         cout << "invalid " << lines.size() << endl;
     } else if (lines.size() > 4) {
@@ -386,10 +500,10 @@ int LineTest::operator()(LineInfo &info) {
             info.set(info_value);
         }
         //test
-//        imshow("show", srcImage);
-//        if (waitKey(1) == 27) {
-//            break;
-//        }
+        imshow("show", srcImage);
+        if (waitKey(1) == 27) {
+            break;
+        }
         status = info.getStop();
     };
     return 0;
