@@ -74,15 +74,16 @@ private:
 
     int pSum(cv::Mat gray);
 
-    cv::Vec4f getEdgeCircle(std::vector<cv::Point> contour);
+    cv::Vec4f getEdgeCircle(cv::Mat &foreground, std::vector<cv::Point> contour);
 
     cv::Vec3f getCircleCoordinate(cv::Vec4f circle, cv::Vec3f info, int wWidth, int wHeight);
 
     std::vector<cv::RotatedRect> getRotatedRect(std::vector<std::vector<cv::Point>>);
 
-    cv::Vec4f getBall(std::vector<std::vector<cv::Point>> contours, cv::Mat &result, rs2::depth_frame depthFrame);
+    cv::Vec4f getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contours, cv::Mat &result,
+                      rs2::depth_frame depthFrame);
 
-    cv::Vec4f getReBall(std::vector<std::vector<cv::Point>> contours, cv::Mat &result, rs2::depth_frame depthFrame);
+    cv::Vec4f getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contours, cv::Mat &result, rs2::depth_frame depthFrame);
 
     void clearInfo();
 

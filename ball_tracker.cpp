@@ -134,15 +134,35 @@ std::vector<RotatedRect> Tracker::getRotatedRect(std::vector<std::vector<Point>>
     return objects;
 }
 
-Vec4f Tracker::getEdgeCircle(std::vector<Point> contour) {
+Vec4f Tracker::getEdgeCircle(cv::Mat &foreground, std::vector<Point> contour) {
     Vec4f circle;
     Point2f center;
     float radius = 0;
-    minEnclosingCircle(contour, center, radius);
+    Moments mu = moments(contour, false);
+    center = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
+    radius = static_cast<float>(sqrt(contourArea(contour) / M_PI));
     circle[0] = center.x;
     circle[1] = center.y;
     circle[2] = radius;
-    circle[3] = static_cast<float>(contourArea(contour) / (M_PI * radius * radius));
+
+    float result = 0;
+    int count = 0;
+    float a = circle[2];
+    if ((circle[0] + circle[2]) >= foreground.cols || (circle[1] + circle[2]) >= foreground.rows ||
+        (circle[0] - circle[2]) < 0 || (circle[1] - circle[2]) < 0)
+        return -1;
+    for (int i = static_cast<int>(ceil(circle[1] - a)); i < circle[1] + a; ++i) {
+        double squareX = pow(a, 2) - pow(i - circle[1], 2);
+        int maxX = static_cast<int>(sqrt(squareX) + circle[0]);
+        int minX = static_cast<int>(ceil(circle[0] - sqrt(squareX)));
+        for (int j = minX; j < maxX; ++j) {
+            uchar value = foreground.at<uchar>(j, i);
+            if (value > 0)
+                result++;
+            count++;
+        }
+    }
+    circle[3] = result / count;
     return circle;
 }
 
@@ -192,7 +212,8 @@ Rect Tracker::selectROIDepth(std::string windowName, cv::Mat &depthMat) {
 }
 
 cv::Vec4f
-Tracker::getBall(std::vector<std::vector<cv::Point>> contours, Mat &resultImage, rs2::depth_frame depthFrame) {
+Tracker::getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contours, Mat &resultImage,
+                 rs2::depth_frame depthFrame) {
     bool minI = false;
     Vec4f minC;
     Vec3f realC;
@@ -243,7 +264,7 @@ Tracker::getBall(std::vector<std::vector<cv::Point>> contours, Mat &resultImage,
         if (contour.size() < minSizes || contour.size() > maxsizes)
             continue;
 
-        Vec4f circle = this->getEdgeCircle(contour);
+        Vec4f circle = this->getEdgeCircle(foreground, contour);
         //2 grade of circle
         if (circle[3] < minP)
             continue;
@@ -416,16 +437,16 @@ int Tracker::passCF(cv::Mat &frame) {
 }
 
 int Tracker::isPassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
-    Mat forground = frame.clone();
-    vector<vector<Point>> contours = this->findForegroundContours(forground, 1);
+    Mat foreground = frame.clone();
+    vector<vector<Point>> contours = this->findForegroundContours(foreground, 1);
     //test
     //imshow("MORPH_CLOSE", forground);
     if (frameI < 30)
-        imwrite("/home/peng/文档/test/f" + to_string(frameI) + ".jpg", forground);
+        imwrite("/home/peng/文档/test/f" + to_string(frameI) + ".jpg", foreground);
     //debouncing
-    double sum = forground.cols * forground.rows;
-    cout << "s:" << (pSum(forground) / sum) << endl;
-    if ((pSum(forground) / sum) > 0.05)
+    double sum = foreground.cols * foreground.rows;
+    cout << "s:" << (pSum(foreground) / sum) << endl;
+    if ((pSum(foreground) / sum) > 0.05)
         return -1;
 //test ring-wather
 //    Mat clo = frame.clone();
@@ -433,7 +454,7 @@ int Tracker::isPassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
 //    imshow("fuck?", clo);
 
     Mat result = frame.clone();
-    Vec4f circle = getBall(contours, result, depthFrame);
+    Vec4f circle = getBall(foreground, contours, result, depthFrame);
     // get result or restart when no ball in 5 frames
     if (circle[0] < 0) {
         int res = -1;
@@ -459,7 +480,7 @@ int Tracker::isPassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
     return 0;
 }
 
-cv::Vec4f Tracker::getReBall(std::vector<std::vector<cv::Point>> contours, cv::Mat &resultImage,
+cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contours, cv::Mat &resultImage,
                              rs2::depth_frame depthFrame) {
     bool minI = false;
     Vec4f minC;
@@ -511,7 +532,7 @@ cv::Vec4f Tracker::getReBall(std::vector<std::vector<cv::Point>> contours, cv::M
         if (contour.size() < minSizes || contour.size() > maxsizes)
             continue;
 
-        Vec4f circle = this->getEdgeCircle(contour);
+        Vec4f circle = this->getEdgeCircle(foreground, contour);
         //2 grade of circle
         if (circle[3] < minP)
             continue;
@@ -586,9 +607,10 @@ cv::Vec4f Tracker::getReBall(std::vector<std::vector<cv::Point>> contours, cv::M
 }
 
 int Tracker::surePassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
-    vector<vector<Point>> contours = this->findForegroundContours(frame, 1);
+    Mat foreground = frame.clone();
+    vector<vector<Point>> contours = this->findForegroundContours(foreground, 1);
     Mat result = frame.clone();
-    Vec4f circle = getReBall(contours, result, depthFrame);
+    Vec4f circle = getReBall(foreground, contours, result, depthFrame);
     //test
     namedWindow("ball", WINDOW_AUTOSIZE);
     //resizeWindow("ball", 848, 480);
@@ -731,7 +753,7 @@ int Tracker::operator()(DeviationPosition &position) try {
     while (!status) {
         status = position.getStop();
         if (position.getStby()) {
-            if (this->frameI != 0){
+            if (this->frameI != 0) {
                 this->frameI = 0;
                 clearInfo();
             }

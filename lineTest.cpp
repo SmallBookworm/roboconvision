@@ -459,7 +459,7 @@ int LineTest::watch(cv::Mat src) {
 int LineTest::operator()(LineInfo &info) {
     //system("v4l2-ctl --set-ctrl=exposure_auto=1 -d /dev/video1");
 
-    VideoCapture capture(0);
+    VideoCapture capture(1);
     //capture.open("/home/peng/下载/realse/1.avi");
     capture.set(CV_CAP_PROP_FRAME_WIDTH, WIDTH);
     capture.set(CV_CAP_PROP_FRAME_HEIGHT, HEIGHT);
@@ -500,10 +500,10 @@ int LineTest::operator()(LineInfo &info) {
             info.set(info_value);
         }
         //test
-        imshow("show", srcImage);
-        if (waitKey(1) == 27) {
-            break;
-        }
+        //imshow("show", srcImage);
+        //if (waitKey(1) == 27) {
+        //    break;
+        //}
         status = info.getStop();
     };
     return 0;
