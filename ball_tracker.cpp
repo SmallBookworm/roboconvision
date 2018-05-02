@@ -156,7 +156,7 @@ Vec4f Tracker::getEdgeCircle(cv::Mat &foreground, std::vector<Point> contour) {
         int maxX = static_cast<int>(sqrt(squareX) + circle[0]);
         int minX = static_cast<int>(ceil(circle[0] - sqrt(squareX)));
         for (int j = minX; j < maxX; ++j) {
-            uchar value = foreground.at<uchar>(j, i);
+            uchar value = foreground.at<uchar>(i, j);
             if (value > 0)
                 result++;
             count++;
@@ -220,8 +220,13 @@ Tracker::getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contou
     float cDepth;
     float cSize;
     float minSizes, maxsizes, minX, minY, maxX, maxY, minDi, maxDi, minZ, maxZ, minP, minR, maxR;
-    minSizes = 10;
-    maxsizes = 100;
+    minSizes = 20;
+    maxsizes = 70;
+
+    minR = 0.07;
+    maxR = 0.2;
+
+    minP = 0.8;
     if (this->realCoordinates.empty()) {
         //initial region
         maxY = resultImage.rows;
@@ -230,17 +235,7 @@ Tracker::getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contou
         minX = resultImage.cols / 3;
         minZ = 1.000;
         maxZ = 5.000;
-
-        minR = 0.1;
-        maxR = 0.5;
-
-        minP = 0.4;
     } else {
-        minR = 0.1;
-        maxR = 0.5;
-
-        minP = 0.4;
-
         Vec3f info = this->ballInfo.back();
         Vec3f realCI = this->realCoordinates.back();
         //speed 50
@@ -256,7 +251,6 @@ Tracker::getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contou
         minZ = realCI[2] + 1.00 * (this->frameI - info[0]) - 1;
 
         minSizes = static_cast<float>(info[1] / (2 * (this->frameI - info[0])));
-        Vec4f before = this->ballCoordinates.back();
     }
     for (auto &contour : contours) {
         //1 point's number
@@ -489,26 +483,22 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
     float cSize;
     float minSizes, maxsizes, minX, minY, maxX, maxY, minDi, maxDi, minZ, maxZ, minP, minR, maxR;
     minSizes = 20;
-    maxsizes = 60;
+    maxsizes = 70;
+
+    minR = 0.07;
+    maxR = 0.2;
+
+    minP = 0.8;
     if (this->realCoordinates.empty()) {
         //initial region
-        maxY = resultImage.rows;
-        minY = 0;
-        maxX = resultImage.cols * 2 / 3;
-        minX = resultImage.cols / 3;
+        maxY = resultImage.rows * 0.75;
+        minY = resultImage.rows * 0.25;
+        maxX = resultImage.cols * 0.75;
+        minX = resultImage.cols * 0.25;
+
         minZ = 1.000;
         maxZ = 5.000;
-
-        minR = 0.1;
-        maxR = 0.5;
-
-        minP = 0.6;
     } else {
-        minR = 0.1;
-        maxR = 0.5;
-
-        minP = 0.6;
-
         Vec3f info = this->ballInfo.back();
         Vec3f realCI = this->realCoordinates.back();
         //speed 50
@@ -524,7 +514,6 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
         minZ = realCI[2] + 1.00 * (this->frameI - info[0]) - 1;
 
         minSizes = static_cast<float>(info[1] / (2 * (this->frameI - info[0])));
-        Vec4f before = this->ballCoordinates.back();
     }
     for (auto &contour : contours) {
         //1 point's number
@@ -560,15 +549,15 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
         //judge zone when empty.if not,distance.
         if (this->ballInfo.empty()) {
             //4 initial region
-            if (coor[2] > maxZ || coor[2] < minZ)
-                continue;
+//            if (coor[2] > maxZ || coor[2] < minZ)
+//                continue;
             if (circle[0] > maxX || circle[0] < minX)
                 continue;
             if (circle[1] > maxY || circle[1] < minY)
                 continue;
         } else {
-            if (coor[2] > maxZ || coor[2] < minZ)
-                continue;
+//            if (coor[2] > maxZ || coor[2] < minZ)
+//                continue;
             double dis = this->realDistance(coor, this->realCoordinates.back());
             cout << "distance:" << dis << endl;
             if (dis > maxDi || dis < minDi)
@@ -778,7 +767,7 @@ int Tracker::operator()(DeviationPosition &position) try {
 //        Rect rect = this->selectROIDepth("ring", ringR);
 //        cout << "rdepth:" << depthFrame.get_distance(rect.tl().x, rect.tl().y) << endl;
 
-            ringWatcher.ring = Vec4f(348, 326, 60, 4.469);
+            ringWatcher.ring = Vec4f(331, 332, 60, 4.469);
             ringWatcher.coordinate = this->getCircleCoordinate(ringWatcher.ring, Vec3f(0, 0, ringWatcher.ring[3]),
                                                                depthFrame.get_width(), depthFrame.get_height());
             //calculate radius ,it is wrong when camera doesn't look at the front horizontally.In fact,it is known.
