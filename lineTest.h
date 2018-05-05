@@ -15,7 +15,7 @@ class LineTest {
 private:
     bool is_nan(double dVal);
 
-    void GetDiffImage(cv::Mat src1, cv::Mat src2, cv::Mat dst, int nThre);
+    void GetDiffImage(cv::Mat src1, cv::Mat dst);
 
     static bool comp(const cv::Vec4i &a, const cv::Vec4i &b);
 

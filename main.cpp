@@ -38,9 +38,9 @@ int main() {
     signal(SIGALRM, printMes);
     memset(&tick, 0, sizeof(tick));
     tick.it_value.tv_sec = 0;
-    tick.it_value.tv_usec = 50000;
+    tick.it_value.tv_usec = 100000;
     tick.it_interval.tv_sec = 0;
-    tick.it_interval.tv_usec = 50000;
+    tick.it_interval.tv_usec = 100000;
     if (setitimer(ITIMER_REAL, &tick, NULL) < 0)
         printf("Set time fail!");
 
