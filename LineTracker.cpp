@@ -189,7 +189,7 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
     const int elesize = 3;
     Mat element = getStructuringElement(MORPH_RECT, Size(elesize, elesize));
     morphologyEx(binaryImage, binaryImage, MORPH_CLOSE, element);
-    imshow("binaryImage", binaryImage);
+    //imshow("binaryImage", binaryImage);
     //求轮廓
     vector<vector<Point>> contour;
     vector<Vec4i> hierarchy;
@@ -202,7 +202,7 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
         }
         drawContours(imageContours, contour, i, Scalar(255), 1, 8, hierarchy);
     }
-    imshow("imageContours", imageContours);
+    //imshow("imageContours", imageContours);
     Mat imageLines = Mat::zeros(imageContours.size(), CV_8UC1);
     LineFinder finder;
     vector<Vec4i> lines = finder.findLines(imageContours, imageLines);
@@ -432,7 +432,7 @@ int LineTracker::watch(cv::Mat &computerImage, cv::Point2f *point) {
         return 1;
     }
     //test
-    imshow("singleLine", singleLine);
-    waitKey(0);
+    //imshow("singleLine", singleLine);
+    //waitKey(0);
     return 0;
 }

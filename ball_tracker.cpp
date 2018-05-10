@@ -405,8 +405,8 @@ int Tracker::isPassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
     vector<vector<Point>> contours = this->findForegroundContours(foreground, 1);
     //test
     //imshow("MORPH_CLOSE", forground);
-    if (frameI < 30)
-        imwrite("/home/peng/文档/test/f" + to_string(frameI) + ".jpg", foreground);
+//    if (frameI < 30)
+//        imwrite("/home/peng/文档/test/f" + to_string(frameI) + ".jpg", foreground);
     //debouncing
     double sum = foreground.cols * foreground.rows;
     cout << "s:" << (pSum(foreground) / sum) << endl;
@@ -431,8 +431,8 @@ int Tracker::isPassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
     //namedWindow("ball", WINDOW_AUTOSIZE);
     //resizeWindow("ball", 848, 480);
     //imshow("ball", result);
-    if (frameI < 30)
-        imwrite("/home/peng/文档/test/ball" + to_string(frameI) + ".jpg", result);
+//    if (frameI < 30)
+//        imwrite("/home/peng/文档/test/ball" + to_string(frameI) + ".jpg", result);
     //usleep(100000);
     //judge result when ball passed ring's plane
     Vec3f info0 = this->realCoordinates.back();
@@ -643,51 +643,51 @@ int Tracker::test() {
 //    }
 //
 //    return EXIT_SUCCESS;
-    ringWatcher.ring = Vec4f(384, 103, 60, 5.334);
-    ringWatcher.coordinate = this->getCircleCoordinate(ringWatcher.ring, Vec3f(0, 0, ringWatcher.ring[3]),
-                                                       848, 480);
-    //calculate radius ,it is wrong when camera doesn't look at the front horizontally.In fact,it is known.
-    ringWatcher.r = static_cast<float>(ringWatcher.ring[2] / (848 / 2) *
-                                       ringWatcher.ring[3] *
-                                       tan(HANGLE / 2));
-    cout << "r:" << ringWatcher.r << endl;
-    cout << "coor" << ringWatcher.coordinate << endl;
-
-    Vec3f point;
-    point[2] = 5.334;
-    vector<float> xs, ys;
-    //x
-    xs.push_back(0.63);
-    xs.push_back(0.73);
-    //z
-    ys.push_back(4.26);
-    ys.push_back(5.4);
-
-    vector<float> func1 = this->curveFitting(xs, ys, 1);
-    point[0] = (point[2] - func1[0]) / func1[1];
-    cout << point[0] << endl;
-    float b = func1[1];
-    //1/sin(a)
-    double bc = sqrt(pow(1 / b, 2) + 1);
-    cout << bc << endl;
-    xs.clear();
-    ys.clear();
-    xs.push_back(static_cast<float &&>(1));
-    ys.push_back(2);
-
-    xs.push_back(static_cast<float &&>(0));
-    ys.push_back(1);
-    xs.push_back(static_cast<float &&>(2));
-    ys.push_back(4);
-    Vec3f func2 = this->x2curveFitting(xs, ys);
-    cout << func2 << endl;
-    point[1] = static_cast<float>(func2[0] + func2[1] * point[2] * bc + func2[2] * pow(point[2] * bc, 2));
-    cout << point[1] << endl;
-    double dis = this->realDistance(ringWatcher.coordinate, point);
-    //d-value
-    Vec3f dv = point - ringWatcher.coordinate;
-    this->dValue.x = -dv[0];
-    this->dValue.y = dv[1];
+//    ringWatcher.ring = Vec4f(384, 103, 60, 5.334);
+//    ringWatcher.coordinate = this->getCircleCoordinate(ringWatcher.ring, Vec3f(0, 0, ringWatcher.ring[3]),
+//                                                       848, 480);
+//    //calculate radius ,it is wrong when camera doesn't look at the front horizontally.In fact,it is known.
+//    ringWatcher.r = static_cast<float>(ringWatcher.ring[2] / (848 / 2) *
+//                                       ringWatcher.ring[3] *
+//                                       tan(HANGLE / 2));
+//    cout << "r:" << ringWatcher.r << endl;
+//    cout << "coor" << ringWatcher.coordinate << endl;
+//
+//    Vec3f point;
+//    point[2] = 5.334;
+//    vector<float> xs, ys;
+//    //x
+//    xs.push_back(0.63);
+//    xs.push_back(0.73);
+//    //z
+//    ys.push_back(4.26);
+//    ys.push_back(5.4);
+//
+//    vector<float> func1 = this->curveFitting(xs, ys, 1);
+//    point[0] = (point[2] - func1[0]) / func1[1];
+//    cout << point[0] << endl;
+//    float b = func1[1];
+//    //1/sin(a)
+//    double bc = sqrt(pow(1 / b, 2) + 1);
+//    cout << bc << endl;
+//    xs.clear();
+//    ys.clear();
+//    xs.push_back(static_cast<float &&>(1));
+//    ys.push_back(2);
+//
+//    xs.push_back(static_cast<float &&>(0));
+//    ys.push_back(1);
+//    xs.push_back(static_cast<float &&>(2));
+//    ys.push_back(4);
+//    Vec3f func2 = this->x2curveFitting(xs, ys);
+//    cout << func2 << endl;
+//    point[1] = static_cast<float>(func2[0] + func2[1] * point[2] * bc + func2[2] * pow(point[2] * bc, 2));
+//    cout << point[1] << endl;
+//    double dis = this->realDistance(ringWatcher.coordinate, point);
+//    //d-value
+//    Vec3f dv = point - ringWatcher.coordinate;
+//    this->dValue.x = -dv[0];
+//    this->dValue.y = dv[1];
 }
 
 
@@ -812,10 +812,10 @@ int Tracker::operator()(DeviationPosition &position) try {
         // Update the window with new data
         //test
         //imshow("display", image);
-        if (frameI < 30) {
-            imwrite("/home/peng/文档/test/" + to_string(frameI) + ".jpg", image);
-            imwrite("/home/peng/文档/test/dep" + to_string(frameI) + ".jpg", frame_to_mat(depth));
-        }
+//        if (frameI < 30) {
+//            imwrite("/home/peng/文档/test/" + to_string(frameI) + ".jpg", image);
+//            imwrite("/home/peng/文档/test/dep" + to_string(frameI) + ".jpg", frame_to_mat(depth));
+//        }
 //        if (waitKey(1) == 27)
 //            break;
 
