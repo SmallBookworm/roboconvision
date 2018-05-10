@@ -335,8 +335,7 @@ Tracker::getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contou
 
 int Tracker::passCF(cv::Mat &frame) {
     unsigned long size = this->ballInfo.size();
-    //when size is 2,fit line.
-    if (size == 2) {
+    if (size >= 2) {
         //ball coordinates in ring's plane (x,y,z)
         Vec3f point;
         //point[2] = ringWatcher.coordinate[2];
@@ -352,61 +351,30 @@ int Tracker::passCF(cv::Mat &frame) {
         //point[0] = (point[2] - func1[0]) / func1[1];
         point[0] = static_cast<float>((ringWatcher.func[0] - func1[0]) / (func1[1] - ringWatcher.func[1]));
         point[2] = func1[0] + point[0] * func1[1];
-        //y
         xs.clear();
         ys.clear();
-        for (int i = 0; i < size; ++i) {
+        //when size is 2,fit line
+        if (size == 2) {
+            for (int i = 0; i < size; ++i) {
+                //y
+                xs.push_back(this->realCoordinates[i][1]);
+                //z
+                ys.push_back(this->realCoordinates[i][2]);
+            }
+            vector<float> func2 = this->curveFitting(xs, ys, 1);
+            point[1] = (point[2] - func2[0]) / func2[1];
+        } else {
             //y
-            xs.push_back(this->realCoordinates[i][1]);
-            //z
-            ys.push_back(this->realCoordinates[i][2]);
+            float b = func1[1];
+            //1/sin(a)
+            double bc = sqrt(pow(1 / b, 2) + 1);
+            for (int j = 0; j < size; ++j) {
+                xs.push_back(static_cast<float &&>(this->realCoordinates[j][2] * bc));
+                ys.push_back(this->realCoordinates[j][1]);
+            }
+            Vec3f func2 = this->x2curveFitting(xs, ys);
+            point[1] = static_cast<float>(func2[0] + func2[1] * point[2] * bc + func2[2] * pow(point[2] * bc, 2));
         }
-        vector<float> func2 = this->curveFitting(xs, ys, 1);
-        point[1] = (point[2] - func2[0]) / func2[1];
-
-        double dis = this->realDistance(ringWatcher.coordinate, point);
-        //d-value
-        Vec3f dv = point - ringWatcher.coordinate;
-        this->dValue.x = -dv[0];
-        this->dValue.y = dv[1];
-
-        float br = this->ballCoordinates.back()[2];
-        float bdepth = this->ballInfo.back()[2];
-        //Of course,ball's radius don't change when coordinate system is changed.
-        // Horizontal FOV (HD 16:9): 64; Vertical FOV (HD 16:9): 41
-        double realR = br / (frame.cols / 2) * bdepth * tan(HANGLE / 2);
-        if (realR + dis < ringWatcher.r)
-            return 1;
-        else if (dis < ringWatcher.r)
-            return 3;
-        else
-            return 2;
-    } else if (size > 2) {
-        //ball coordinates in ring's plane (x,y,z)
-        Vec3f point;
-        point[2] = ringWatcher.coordinate[2];
-        //x
-        vector<float> xs, ys;
-        for (int i = 0; i < size; ++i) {
-            //x
-            xs.push_back(this->realCoordinates[i][0]);
-            //z
-            ys.push_back(this->realCoordinates[i][2]);
-        }
-        vector<float> func1 = this->curveFitting(xs, ys, 1);
-        point[0] = (point[2] - func1[0]) / func1[1];
-        //y
-        float b = func1[1];
-        //1/sin(a)
-        double bc = sqrt(pow(1 / b, 2) + 1);
-        xs.clear();
-        ys.clear();
-        for (int j = 0; j < size; ++j) {
-            xs.push_back(static_cast<float &&>(this->realCoordinates[j][2] * bc));
-            ys.push_back(this->realCoordinates[j][1]);
-        }
-        Vec3f func2 = this->x2curveFitting(xs, ys);
-        point[1] = static_cast<float>(func2[0] + func2[1] * point[2] * bc + func2[2] * pow(point[2] * bc, 2));
 
         double dis = this->realDistance(ringWatcher.coordinate, point);
         //d-value( right hand coordinate system)
