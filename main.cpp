@@ -123,7 +123,19 @@ int main() {
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
             if ((state & DROP_MODE) == 0) {
                 state |= DROP_MODE;
-                position.init(Vec3f(0, 0, 0));
+                //ring coordinate
+                short x, y, angle;
+                memcpy(&x, &info.result.meta.positionX, sizeof(x));
+                memcpy(&y, &info.result.meta.positionY, sizeof(x));
+                memcpy(&angle, &info.result.meta.angle, sizeof(x));
+
+                Vec4f ring(y - 500, 2400, x + 2650, angle);
+                //change coordinate system
+                float c1 = ring[0], c2 = ring[2];
+                ring[0] = static_cast<float>(cos(angle) * c1 - sin(angle) * c2);
+                ring[2] = static_cast<float>(cos(angle) * c2 + sin(angle) * c1);
+                //mm -> m
+                position.init(ring / 1000);
             }
             Point2f ballPoint;
             int res = position.getPoint(ballPoint);

@@ -11,7 +11,6 @@ using namespace cv;
 
 Tracker::Tracker() {
     this->frameI = 0;
-    ringWatcher.ring[0] = -1;
     reboundTest = false;
 }
 
@@ -33,6 +32,7 @@ Mat Tracker::leastSquares(cv::Mat inMat, cv::Mat outMat) {
 
 }
 
+//1,x,x^2,x^3...
 std::vector<float> Tracker::curveFitting(std::vector<float> x, std::vector<float> y, int dimension) {
     int size = static_cast<int>(x.size());
     Mat inMat(size, dimension + 1, CV_32FC1), outMat(size, 1, CV_32FC1);
@@ -339,7 +339,7 @@ int Tracker::passCF(cv::Mat &frame) {
     if (size == 2) {
         //ball coordinates in ring's plane (x,y,z)
         Vec3f point;
-        point[2] = ringWatcher.coordinate[2];
+        //point[2] = ringWatcher.coordinate[2];
         //x
         vector<float> xs, ys;
         for (int i = 0; i < size; ++i) {
@@ -349,7 +349,9 @@ int Tracker::passCF(cv::Mat &frame) {
             ys.push_back(this->realCoordinates[i][2]);
         }
         vector<float> func1 = this->curveFitting(xs, ys, 1);
-        point[0] = (point[2] - func1[0]) / func1[1];
+        //point[0] = (point[2] - func1[0]) / func1[1];
+        point[0] = static_cast<float>((ringWatcher.func[0] - func1[0]) / (func1[1] - ringWatcher.func[1]));
+        point[2] = func1[0] + point[0] * func1[1];
         //y
         xs.clear();
         ys.clear();
@@ -746,6 +748,7 @@ int Tracker::operator()(DeviationPosition &position) try {
                 this->frameI = 0;
                 clearInfo();
             }
+            //standby
             continue;
         }
         rs2::frameset data = pipe.wait_for_frames(); // Wait for next set of frames from the camera
@@ -761,24 +764,32 @@ int Tracker::operator()(DeviationPosition &position) try {
         Mat image = frame_to_mat(aligned_set.get_color_frame());
 
         //get ring data
-        if (ringWatcher.ring[0] < 0 && this->frameI > 0) {
+        if (ringWatcher.r < 0 && this->frameI > 0) {
 //        Mat ringR = image.clone();
 //        imshow("ring", ringR);
 //        Rect rect = this->selectROIDepth("ring", ringR);
 //        cout << "rdepth:" << depthFrame.get_distance(rect.tl().x, rect.tl().y) << endl;
 
-            ringWatcher.ring = Vec4f(331, 332, 60, 4.469);
-            ringWatcher.coordinate = this->getCircleCoordinate(ringWatcher.ring, Vec3f(0, 0, ringWatcher.ring[3]),
-                                                               depthFrame.get_width(), depthFrame.get_height());
+//            ringWatcher.ring = Vec4f(331, 332, 60, 4.469);
+//            ringWatcher.coordinate = this->getCircleCoordinate(ringWatcher.ring, Vec3f(0, 0, ringWatcher.ring[3]),
+//                                                               depthFrame.get_width(), depthFrame.get_height());
             //calculate radius ,it is wrong when camera doesn't look at the front horizontally.In fact,it is known.
-            ringWatcher.r = static_cast<float>(ringWatcher.ring[2] / (depthFrame.get_width() / 2) *
-                                               ringWatcher.ring[3] *
-                                               tan(HANGLE / 2));
-
-            cout << "r:" << ringWatcher.r << endl;
-            cout << "coor" << ringWatcher.coordinate << endl;
-            //ringWatcher.r = 0.4;
-            //ringWatcher.coordinate=Vec3f(-0.3,2.7,3.5);
+//            ringWatcher.r = static_cast<float>(ringWatcher.ring[2] / (depthFrame.get_width() / 2) *
+//                                               ringWatcher.ring[3] *
+//                                               tan(HANGLE / 2));
+//
+//            cout << "r:" << ringWatcher.r << endl;
+//            cout << "coor" << ringWatcher.coordinate << endl;
+            ringWatcher.r = 0.4;
+            Vec4f coor = position.getRing();
+            ringWatcher.coordinate = Vec3f(coor[0], coor[1], coor[2]);
+            if (coor[3] < 90 && coor[3] > 0) {
+                ringWatcher.func[1] = -tan(90 - coor[3]);
+                ringWatcher.func[0] = coor[2] - ringWatcher.func[1] * coor[0];
+            } else {
+                ringWatcher.func[0] = coor[2];
+                ringWatcher.func[1] = 0;
+            }
         }
 
         //compute result
