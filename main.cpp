@@ -7,6 +7,7 @@
 #include "Info.h"
 #include "ball_tracker.h"
 #include "lineTest.h"
+#include "rtlFinder.h"
 
 #define DOCKING_MODE 0x1
 #define DROP_MODE 0x2
@@ -44,10 +45,14 @@ int main() {
     if (setitimer(ITIMER_REAL, &tick, NULL) < 0)
         printf("Set time fail!");
 
-    LineTracker lineTracker;
 
     //union Out s{};
     //cout << s.data << " length:" << sizeof(s.data) << endl;
+
+    RtlFinder rtlFinder;
+    RtlInfo rtlInfo;
+    thread thread11(rtlFinder, ref(rtlInfo));
+    thread11.detach();
 
     DeviationPosition position;
     position.await();
@@ -55,6 +60,7 @@ int main() {
     thread thread1(tracker, ref(position));
     thread1.detach();
 
+    LineTracker lineTracker;
     LineInfo lineInfo;
     Info info;
     while (true) {
@@ -103,7 +109,6 @@ int main() {
             float res[3];
             int resF = lineInfo.get(res);
             if (resF > 0) {
-                cout << res << endl;
                 wdata.meta.dataArea[0] |= 0x02;
                 memcpy(wdata.meta.dockDModule, &res[0], sizeof(res[0]));
                 memcpy(wdata.meta.dockArgument, &res[1], sizeof(res[0]));
@@ -131,8 +136,18 @@ int main() {
 
         } else if ((state & DROP_MODE) != 0) {
             state ^= DROP_MODE;
-            cout<<">?"<<endl;
+            cout << ">?" << endl;
             position.await();
+        }
+        //realtime find line
+        double rtlCoordinate[4];
+        int res = rtlInfo.get(rtlCoordinate);
+        if (res >= 0) {
+            wdata.meta.dataArea[0] |= 0x08;
+            memcpy(wdata.meta.xAngle, &rtlCoordinate[0], sizeof(rtlCoordinate[0]));
+            memcpy(wdata.meta.yAngle, &rtlCoordinate[1], sizeof(rtlCoordinate[0]));
+            memcpy(wdata.meta.xDis, &rtlCoordinate[2], sizeof(rtlCoordinate[0]));
+            memcpy(wdata.meta.yDis, &rtlCoordinate[3], sizeof(rtlCoordinate[0]));
         }
     }
     return 0;

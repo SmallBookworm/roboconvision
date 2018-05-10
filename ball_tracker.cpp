@@ -407,9 +407,9 @@ int Tracker::passCF(cv::Mat &frame) {
         point[1] = static_cast<float>(func2[0] + func2[1] * point[2] * bc + func2[2] * pow(point[2] * bc, 2));
 
         double dis = this->realDistance(ringWatcher.coordinate, point);
-        //d-value
+        //d-value( right hand coordinate system)
         Vec3f dv = point - ringWatcher.coordinate;
-        this->dValue.x = -dv[0];
+        this->dValue.x = dv[0];
         this->dValue.y = dv[1];
 
         float br = this->ballCoordinates.back()[2];

@@ -146,7 +146,7 @@ vector<Vec4i> LineTest::findCorner(Mat dst) {
     for (int i = 0; i < contours.size(); i++) {
         Point2f P[4];
 
-        if (contours[i].capacity() > 50) //change according to fps
+        if (contours[i].capacity() > 200) //change according to fps
         {
             Vec4i leftLine;
             Vec4i rightLine;
@@ -367,8 +367,9 @@ vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption lef
 //    all_data.push_back(pix_right_height);
 //    all_data.push_back(leftToCenter);
 //    all_data.push_back(rightToCenter);
-    namedWindow("final", 0);
+    //namedWindow("final", 0);
     imshow("final", paint);
+    waitKey(0);
     return all_data;
 }
 
@@ -395,12 +396,14 @@ int LineTest::watch(cv::Mat src) {
 
     split(src, mv);
     GetDiffImage(mv[1], dst);
+
     //先膨胀，后腐蚀（联通区域）
     cv::erode(dst, pBinary, elementC);
     cv::dilate(pBinary, dst, elementC);
     threshold(dst, dst, 30, 255, THRESH_BINARY);
 
-    GaussianBlur(dst, dst, Size(5, 5), 0, 0);
+    GaussianBlur(dst, dst, Size(3, 3), 0, 0);
+    //imshow("eee",dst);
     //得到角点
     lines = findCorner(dst);
     vector<float> data;
@@ -438,8 +441,11 @@ int LineTest::watch(cv::Mat src) {
     } else if (lines.size() < 4) {
         cout << "invalid " << lines.size() << endl;
     } else if (lines.size() > 4) {
+        //imshow("eeee",src);
+        //waitKey(0);
         cout << "invalid " << lines.size() << endl;
     }
+    //waitKey(0);
     return static_cast<int>(lines.size());
 }
 
