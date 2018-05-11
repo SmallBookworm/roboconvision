@@ -270,7 +270,7 @@ vector<Vec4i> LineTest::findCorner(Mat dst) {
     return lines;
 }
 
-vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption left_line, LinesOption right_line,
+vector<float> LineTest::analyse(Mat paint, LinesOption left_line, LinesOption right_line,
                                 vector<Vec4i> lines) {
 
     vector<float> all_data;
@@ -305,7 +305,7 @@ vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption lef
         float *data1 = locateToLocate.ptr<float>(0);
         float x = data1[0];
         float *data2 = locateToLocate.ptr<float>(0);
-        float y = data1[1];
+        float y = data2[1];
         all_data.push_back(angle);
         all_data.push_back(x);
         all_data.push_back(y);
@@ -329,7 +329,7 @@ vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption lef
         float *data1 = locateToLocate.ptr<float>(0);
         float x = data1[0];
         float *data2 = locateToLocate.ptr<float>(0);
-        float y = data1[1];
+        float y = data2[1];
         all_data.push_back(angle);
         all_data.push_back(x);
         all_data.push_back(y);
@@ -357,7 +357,7 @@ vector<float> LineTest::analyse(Mat paint, LinesOption all_line, LinesOption lef
         float *data1 = locateToLocate.ptr<float>(0);
         float x = data1[0];
         float *data2 = locateToLocate.ptr<float>(0);
-        float y = data1[1];
+        float y = data2[1];
         all_data.push_back(angle);
         all_data.push_back(x);
         all_data.push_back(y);
@@ -412,7 +412,7 @@ int LineTest::watch(cv::Mat src) {
     if (lines.size() == 4) {
         Scalar sca = Scalar(0, 0, 255);
         drawDetectLines(src, lines, sca);
-        data = analyse(src, all_line, left_line, right_line, lines);
+        data = analyse(src, left_line, right_line, lines);
         if (abs(data[0]) < angleThreshold) {
             data[0] = 0;
         }
