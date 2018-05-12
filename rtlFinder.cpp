@@ -268,21 +268,25 @@ int RtlFinder::operator()(RtlInfo &info) {
             cv::Mat B;
             double theta2 = 0;
             double error2 = 0;
+            double dy = 0;
             double theta1 = 0;
             double error1 = 0;
+            double dx = 0;
             polynomial_curve_fit(AllMidPointsL, 1, B);//拟合直线得到 k， b
             theta2 = atan(B.at<double>(1, 0)) / M_PI * 180;
             error2 = B.at<double>(0, 0);
-            cout << "x方向 角度：" << theta2 << "    距离：" << error2 << endl;
+            dy = B.at<double>(1, 0) * 399 + B.at<double>(0, 0);
+            cout << "x方向 角度：" << theta2 << "    距离：" << dy << endl;
 
             if (num1 > 5) {
                 cv::Mat A;
                 polynomial_curve_fit(AllMidPointsB, 1, A);//拟合直线得到 k， b
                 theta1 = atan(A.at<double>(1, 0)) / M_PI * 180;
                 error1 = A.at<double>(0, 0);
-                cout << "y方向 角度：" << theta1 << "    距离：" << error1 << endl;
+                dx = (399 - A.at<double>(0, 0)) / A.at<double>(1, 0);
+                cout << "y方向 角度：" << theta1 << "    距离：" << dx << endl;
             }
-            info.set(theta2, error2, theta1, error1);
+            info.set(theta2, dy, theta1, dx);
         } else {
             cout << " 未出现正确图像" << endl;
             continue;
