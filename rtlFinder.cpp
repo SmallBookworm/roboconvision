@@ -244,7 +244,7 @@ int RtlFinder::operator()(RtlInfo &info) {
         {
             break;
         }
-        imshow("frame", frame);
+        //imshow("frame", frame);
         Mat srcThreshold = getThreshold(frame);
 
         //透视变换
@@ -257,7 +257,7 @@ int RtlFinder::operator()(RtlInfo &info) {
         //截取能处理部分
         Mat small = perspectiveImage(Rect(200, 200, 400, 400));
         imshow("small", small);
-        waitKey(10);
+        //waitKey(10);
         vector<Point> AllMidPointsB = FindAllMidPointsBottom(small);//找到所有底边白色带上的中点
         vector<Point> AllMidPointsL = FindAllMidPointsLeft(small);//找到所有右边白色带上的中点
         int num1 = AllMidPointsB.size();//如果中点数超过5个认为可以进行直线拟合
