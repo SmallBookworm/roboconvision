@@ -248,8 +248,9 @@ int RtlFinder::operator()(RtlInfo &info) {
         Mat srcThreshold = getThreshold(frame);
 
         //透视变换
-        float rotate[9] = {0.08728578392461216, -0.6176497083400576, 393.3734235376653, 0.08954857760196466,
-                           0.08314572786529953, 35.20695175012455, -0.0007368901244042446, -0.0004900249335489653, 1};
+        float rotate[9] = {1.56581223e+00, 8.83653523e+00, -1.38263906e+03,
+                           -2.75104595e+00, 5.91734853e+00, 5.58120106e+02,
+                           1.88488768e-04, 1.00633412e-02, 1.00000000e+00};
         Mat transform = Mat(3, 3, CV_32FC1, rotate);
         Mat perspectiveImage;
         warpPerspective(srcThreshold, perspectiveImage, transform, Size(srcThreshold.cols * 3, srcThreshold.rows * 3),
