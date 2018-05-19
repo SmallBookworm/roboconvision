@@ -35,10 +35,14 @@ private:
     std::vector<cv::Vec3f> realCoordinates;
     //frame,points size,depth,
     std::vector<cv::Vec3f> ballInfo;
-    //x,y,z,r
+
+    //x,y,r,score
     std::vector<cv::Vec4f> reBall;
+    //x,y,z
+    std::vector<cv::Vec3f> reRealCoordinates;
     //frame,points size,depth,
     std::vector<cv::Vec3f> reBallInfo;
+
     RingWatcher ringWatcher;
     cv::Point2f dValue;
     bool reboundTest;
@@ -83,7 +87,8 @@ private:
     cv::Vec4f getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contours, cv::Mat &result,
                       rs2::depth_frame depthFrame);
 
-    cv::Vec4f getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contours, cv::Mat &result, rs2::depth_frame depthFrame);
+    cv::Vec4f getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contours, cv::Mat &result,
+                        rs2::depth_frame depthFrame);
 
     void clearInfo();
 

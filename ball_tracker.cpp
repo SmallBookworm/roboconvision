@@ -82,7 +82,7 @@ vector<vector<Point>> Tracker::findAllContours(Mat &input, bool isDepth) {
 //    imshow("GaussianBlur", frame);
 
     Canny(frame, frame, 30, 60, 3);
-    imshow("Canny", frame);
+    //imshow("Canny", frame);
 
     vector<vector<Point>> contours;
     std::vector<Vec4i> hierarchy;
@@ -405,8 +405,8 @@ int Tracker::isPassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
     vector<vector<Point>> contours = this->findForegroundContours(foreground, 1);
     //test
     //imshow("MORPH_CLOSE", forground);
-//    if (frameI < 30)
-//        imwrite("/home/peng/文档/test/f" + to_string(frameI) + ".jpg", foreground);
+    if (frameI < 30)
+        imwrite("/home/peng/文档/test/f" + to_string(frameI) + ".jpg", foreground);
     //debouncing
     double sum = foreground.cols * foreground.rows;
     cout << "s:" << (pSum(foreground) / sum) << endl;
@@ -431,8 +431,8 @@ int Tracker::isPassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
     //namedWindow("ball", WINDOW_AUTOSIZE);
     //resizeWindow("ball", 848, 480);
     //imshow("ball", result);
-//    if (frameI < 30)
-//        imwrite("/home/peng/文档/test/ball" + to_string(frameI) + ".jpg", result);
+    if (frameI < 30)
+        imwrite("/home/peng/文档/test/ball" + to_string(frameI) + ".jpg", result);
     //usleep(100000);
     //judge result when ball passed ring's plane
     Vec3f info0 = this->realCoordinates.back();
@@ -451,7 +451,7 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
     Vec3f realC;
     float cDepth;
     float cSize;
-    float minSizes, maxsizes, minX, minY, maxX, maxY, minDi, maxDi, minZ, maxZ, minP, minR, maxR;
+    float minSizes, maxsizes, minX, minY, maxX, maxY, minDi, maxDi, minP, minR, maxR;
     minSizes = 20;
     maxsizes = 70;
 
@@ -459,31 +459,23 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
     maxR = 0.2;
 
     minP = 0.8;
-    if (this->realCoordinates.empty()) {
+    if (this->reBall.empty()) {
         //initial region
-        maxY = resultImage.rows * 0.75;
-        minY = resultImage.rows * 0.25;
+        maxY = resultImage.rows * 0;
+        minY = resultImage.rows * 0.5;
         maxX = resultImage.cols * 0.75;
         minX = resultImage.cols * 0.25;
-
-        minZ = 1.000;
-        maxZ = 5.000;
+        //prevent shaking ring
+        maxDi = 2;
+        minDi = 0.5;
     } else {
-        Vec3f info = this->ballInfo.back();
-        Vec3f realCI = this->realCoordinates.back();
-        //speed 50
-//        maxX = before[0] + 100 * (this->frameI - info[0]);
-//        minX = before[0];
-//        maxY = before[1] + 50 * (this->frameI - info[0]);
-//        minY = before[1] - 50 * (this->frameI - info[0]);
+        Vec3f info = this->reBallInfo.back();
+        Vec3f realCI = this->reRealCoordinates.back();
 
         maxDi = 2 * (this->frameI - info[0]);
         minDi = 0;
-        //make sure that ball goes far away.
-        maxZ = realCI[2] + 1.00 * (this->frameI - info[0]) + 1;
-        minZ = realCI[2] + 1.00 * (this->frameI - info[0]) - 1;
 
-        minSizes = static_cast<float>(info[1] / (2 * (this->frameI - info[0])));
+        minSizes = info[1] / (2 * (this->frameI - info[0]));
     }
     for (auto &contour : contours) {
         //1 point's number
@@ -517,18 +509,17 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
         //test
         cout << coor << endl;
         //judge zone when empty.if not,distance.
-        if (this->ballInfo.empty()) {
-            //4 initial region
-//            if (coor[2] > maxZ || coor[2] < minZ)
-//                continue;
+        if (this->reBallInfo.empty()) {
             if (circle[0] > maxX || circle[0] < minX)
                 continue;
             if (circle[1] > maxY || circle[1] < minY)
                 continue;
-        } else {
-//            if (coor[2] > maxZ || coor[2] < minZ)
-//                continue;
             double dis = this->realDistance(coor, this->realCoordinates.back());
+            cout << "distance:" << dis << endl;
+            if (dis > maxDi || dis < minDi)
+                continue;
+        } else {
+            double dis = this->realDistance(coor, this->reRealCoordinates.back());
             cout << "distance:" << dis << endl;
             if (dis > maxDi || dis < minDi)
                 continue;
@@ -541,7 +532,7 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
             cDepth = depth;
             realC = coor;
             minI = true;
-        } else if (circle[3] < minC[3]) {
+        } else if (circle[3] > minC[3]) {
             minC = circle;
             cSize = contour.size();
             cDepth = depth;
@@ -552,15 +543,15 @@ cv::Vec4f Tracker::getReBall(cv::Mat &foreground, std::vector<std::vector<cv::Po
         minC[0] = -1;
         return minC;
     }
-    this->ballCoordinates.push_back(minC);
-    this->ballInfo.emplace_back(this->frameI, cSize, cDepth);
-    this->realCoordinates.push_back(realC);
+    this->reBall.push_back(minC);
+    this->reBallInfo.emplace_back(this->frameI, cSize, cDepth);
+    this->reRealCoordinates.push_back(realC);
     //test
     Point center(round(minC[0]), round(minC[1]));
     int radius = round(minC[2]);
     cv::circle(resultImage, center, radius, Scalar(0, 255, 0), 1);
     cerr << minC << endl;
-    cerr << this->ballInfo.back() << endl;
+    cerr << this->reBallInfo.back() << endl;
     cerr << realC << endl;
     return minC;
 }
@@ -571,9 +562,9 @@ int Tracker::surePassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
     Mat result = frame.clone();
     Vec4f circle = getReBall(foreground, contours, result, depthFrame);
     //test
-    namedWindow("ball", WINDOW_AUTOSIZE);
+    //namedWindow("ball", WINDOW_AUTOSIZE);
     //resizeWindow("ball", 848, 480);
-    imshow("ball", result);
+    //imshow("ball", result);
     //usleep(100000);
 
     //judge result when ball passed 5 frames
@@ -583,12 +574,10 @@ int Tracker::surePassed(cv::Mat &frame, rs2::depth_frame depthFrame) {
             return 1;
         } else {
             float dDep = 0;
-            dDep = this->realCoordinates.back()[2] - this->reBall.front()[2];
-            for (int i = 1; i < this->reBall.size(); ++i) {
-                if (dDep < 0) {
-                    this->clearInfo();
-                    return 1;
-                }
+            dDep = this->realCoordinates.back()[2] - this->reRealCoordinates.front()[2];
+            if (dDep < 0) {
+                this->clearInfo();
+                return 1;
             }
             //fail when  ball closes in 5 frames
             this->clearInfo();
@@ -608,86 +597,11 @@ void Tracker::clearInfo() {
     this->ballCoordinates.clear();
     this->realCoordinates.clear();
     this->reBall.clear();
+    this->reRealCoordinates.clear();
     this->reBallInfo.clear();
 }
 
 int Tracker::test() {
-//    // Declare depth colorizer for pretty visualization of depth data
-//    rs2::colorizer color_map;
-//
-//    // Declare RealSense pipeline, encapsulating the actual device and sensors
-//    rs2::pipeline pipe;
-//    //Create a configuration for configuring the pipeline with a non default profile
-//    rs2::config cfg;
-//    //Add desired streams to configuration
-//    cfg.enable_stream(RS2_STREAM_INFRARED, 1280, 720, RS2_FORMAT_Y8, 30);
-//    cfg.enable_stream(RS2_STREAM_DEPTH, 1280, 720, RS2_FORMAT_Z16, 30);
-//    //cfg.enable_stream(RS2_STREAM_COLOR, 848, 480, RS2_FORMAT_BGR8, 30);
-//    // Start streaming with default recommended configuration
-//    pipe.start(cfg);
-//
-//    const auto window_name = "Display Image";
-//    namedWindow(window_name, WINDOW_AUTOSIZE);
-//    bool contFlag = true;
-//    while (contFlag) {
-//        rs2::frameset data = pipe.wait_for_frames(); // Wait for next set of frames from the camera
-//        rs2::depth_frame depthFrame = data.get_depth_frame();
-//        Mat depthMat = depth_frame_to_meters(pipe, depthFrame);
-//        inRange(depthMat, 5.5, 6.3, depthMat);
-//        ++this->frameI;
-//        cout << "frame:" << this->frameI << endl;
-//        //compute result
-//        // Update the window with new data
-//        imshow(window_name, depthMat);
-//        contFlag = waitKey(1) < 0;
-//    }
-//
-//    return EXIT_SUCCESS;
-//    ringWatcher.ring = Vec4f(384, 103, 60, 5.334);
-//    ringWatcher.coordinate = this->getCircleCoordinate(ringWatcher.ring, Vec3f(0, 0, ringWatcher.ring[3]),
-//                                                       848, 480);
-//    //calculate radius ,it is wrong when camera doesn't look at the front horizontally.In fact,it is known.
-//    ringWatcher.r = static_cast<float>(ringWatcher.ring[2] / (848 / 2) *
-//                                       ringWatcher.ring[3] *
-//                                       tan(HANGLE / 2));
-//    cout << "r:" << ringWatcher.r << endl;
-//    cout << "coor" << ringWatcher.coordinate << endl;
-//
-//    Vec3f point;
-//    point[2] = 5.334;
-//    vector<float> xs, ys;
-//    //x
-//    xs.push_back(0.63);
-//    xs.push_back(0.73);
-//    //z
-//    ys.push_back(4.26);
-//    ys.push_back(5.4);
-//
-//    vector<float> func1 = this->curveFitting(xs, ys, 1);
-//    point[0] = (point[2] - func1[0]) / func1[1];
-//    cout << point[0] << endl;
-//    float b = func1[1];
-//    //1/sin(a)
-//    double bc = sqrt(pow(1 / b, 2) + 1);
-//    cout << bc << endl;
-//    xs.clear();
-//    ys.clear();
-//    xs.push_back(static_cast<float &&>(1));
-//    ys.push_back(2);
-//
-//    xs.push_back(static_cast<float &&>(0));
-//    ys.push_back(1);
-//    xs.push_back(static_cast<float &&>(2));
-//    ys.push_back(4);
-//    Vec3f func2 = this->x2curveFitting(xs, ys);
-//    cout << func2 << endl;
-//    point[1] = static_cast<float>(func2[0] + func2[1] * point[2] * bc + func2[2] * pow(point[2] * bc, 2));
-//    cout << point[1] << endl;
-//    double dis = this->realDistance(ringWatcher.coordinate, point);
-//    //d-value
-//    Vec3f dv = point - ringWatcher.coordinate;
-//    this->dValue.x = -dv[0];
-//    this->dValue.y = dv[1];
 }
 
 
@@ -812,10 +726,10 @@ int Tracker::operator()(DeviationPosition &position) try {
         // Update the window with new data
         //test
         //imshow("display", image);
-//        if (frameI < 30) {
-//            imwrite("/home/peng/文档/test/" + to_string(frameI) + ".jpg", image);
-//            imwrite("/home/peng/文档/test/dep" + to_string(frameI) + ".jpg", frame_to_mat(depth));
-//        }
+        if (frameI < 30) {
+            imwrite("/home/peng/文档/test/" + to_string(frameI) + ".jpg", image);
+            imwrite("/home/peng/文档/test/dep" + to_string(frameI) + ".jpg", frame_to_mat(depth));
+        }
 //        if (waitKey(1) == 27)
 //            break;
 

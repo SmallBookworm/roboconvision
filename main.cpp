@@ -5,7 +5,6 @@
 #include "serial.hpp"
 #include "Info.h"
 #include "ball_tracker.h"
-#include "lineTest.h"
 #include "rtlFinder.h"
 
 #define DOCKING_MODE 0x1
@@ -38,9 +37,9 @@ int main() {
     signal(SIGALRM, printMes);
     memset(&tick, 0, sizeof(tick));
     tick.it_value.tv_sec = 0;
-    tick.it_value.tv_usec = 100000;
+    tick.it_value.tv_usec = 50000;
     tick.it_interval.tv_sec = 0;
-    tick.it_interval.tv_usec = 100000;
+    tick.it_interval.tv_usec = 50000;
     if (setitimer(ITIMER_REAL, &tick, NULL) < 0)
         printf("Set time fail!");
 
@@ -48,10 +47,13 @@ int main() {
     //union Out s{};
     //cout << s.data << " length:" << sizeof(s.data) << endl;
 
-    RtlFinder rtlFinder;
     RtlInfo rtlInfo;
-    thread thread11(rtlFinder, ref(rtlInfo));
-    thread11.detach();
+    RtlFinder rtlFinder;
+    bool test = true;
+    if (!test) {
+        thread thread11(rtlFinder, ref(rtlInfo));
+        thread11.detach();
+    }
 
     DeviationPosition position;
     position.await();
@@ -67,8 +69,7 @@ int main() {
         //sometime read nothing
         if (n <= 0)
             continue;
-        //cout << int(rdata) << endl;
-        //cout << info.result.data << " length:" << sizeof(info.result.data) << endl;
+        //test data,startup when get full package
         if (info.push(rdata) <= 0)continue;
         //wdata.meta.dataArea[0] = 0;
         //cout << "Drop mode" << (info.result.meta.flag1[0] & (1 << 2)) << endl;
