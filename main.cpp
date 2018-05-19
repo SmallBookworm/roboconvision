@@ -83,13 +83,20 @@ int main() {
                 memcpy(&y, &info.result.meta.positionY, sizeof(x));
                 memcpy(&angle, &info.result.meta.angle, sizeof(x));
 
-                Vec4f ring(y - 500, 2400, x + 3175, angle);
+                //the Global Positioning System's height is  340 mm
+                Vec4f ring(y - 500, 2400 - 340, x + 3175, angle / 180.0 * M_PI);
                 //change coordinate system
                 float c1 = ring[0], c2 = ring[2];
-                ring[0] = static_cast<float>(cos(angle) * c1 - sin(angle) * c2);
-                ring[2] = static_cast<float>(cos(angle) * c2 + sin(angle) * c1);
+                ring[0] = static_cast<float>(cos(ring[3]) * c1 - sin(ring[3]) * c2);
+                ring[2] = static_cast<float>(cos(ring[3]) * c2 + sin(ring[3]) * c1);
+                //camera relative position
+                ring[2] -= 500;
                 //mm -> m
-                position.init(ring / 1000);
+                ring[0] /= 1000;
+                ring[1] /= 1000;
+                ring[2] /= 1000;
+
+                position.init(ring);
             }
             Point2f ballPoint;
             int res = position.getPoint(ballPoint);
