@@ -83,7 +83,7 @@ int main() {
                 memcpy(&y, &info.result.meta.positionY, sizeof(x));
                 memcpy(&angle, &info.result.meta.angle, sizeof(x));
 
-                Vec4f ring(y - 500, 2400, x + 2650, angle);
+                Vec4f ring(y - 500, 2400, x + 3175, angle);
                 //change coordinate system
                 float c1 = ring[0], c2 = ring[2];
                 ring[0] = static_cast<float>(cos(angle) * c1 - sin(angle) * c2);

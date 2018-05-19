@@ -234,7 +234,7 @@ Tracker::getBall(cv::Mat &foreground, std::vector<std::vector<cv::Point>> contou
         maxX = resultImage.cols * 2 / 3;
         minX = resultImage.cols / 3;
         minZ = 1.000;
-        maxZ = 5.000;
+        maxZ = ringWatcher.coordinate[2];
     } else {
         Vec3f info = this->ballInfo.back();
         Vec3f realCI = this->realCoordinates.back();
@@ -377,6 +377,7 @@ int Tracker::passCF(cv::Mat &frame) {
         }
 
         double dis = this->realDistance(ringWatcher.coordinate, point);
+        //cout << "bp:" << point <<"  dis:"<<dis<< endl;
         //d-value( right hand coordinate system)
         Vec3f dv = point - ringWatcher.coordinate;
         this->dValue.x = dv[0];
@@ -652,7 +653,7 @@ int Tracker::operator()(DeviationPosition &position) try {
 //        Rect rect = this->selectROIDepth("ring", ringR);
 //        cout << "rdepth:" << depthFrame.get_distance(rect.tl().x, rect.tl().y) << endl;
 
-//            ringWatcher.ring = Vec4f(331, 332, 60, 4.469);
+//            ringWatcher.ring = Vec4f(328, 335, 60, 4.069);
 //            ringWatcher.coordinate = this->getCircleCoordinate(ringWatcher.ring, Vec3f(0, 0, ringWatcher.ring[3]),
 //                                                               depthFrame.get_width(), depthFrame.get_height());
             //calculate radius ,it is wrong when camera doesn't look at the front horizontally.In fact,it is known.
@@ -665,13 +666,15 @@ int Tracker::operator()(DeviationPosition &position) try {
             ringWatcher.r = 0.4;
             Vec4f coor = position.getRing();
             ringWatcher.coordinate = Vec3f(coor[0], coor[1], coor[2]);
-            if (coor[3] < 90 && coor[3] > 0) {
-                ringWatcher.func[1] = -tan(90 - coor[3]);
+            if (coor[3] < (M_PI / 2) && coor[3] > 0) {
+                ringWatcher.func[1] = -tan(M_PI / 2 - coor[3]);
                 ringWatcher.func[0] = coor[2] - ringWatcher.func[1] * coor[0];
             } else {
                 ringWatcher.func[0] = coor[2];
                 ringWatcher.func[1] = 0;
             }
+            cout << "rwc:" << ringWatcher.coordinate << endl;
+            cout << "rfc:" << ringWatcher.func[0] << "  " << ringWatcher.func[1] << endl;
         }
 
         //compute result
