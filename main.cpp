@@ -49,7 +49,7 @@ int main() {
 
     RtlInfo rtlInfo;
     RtlFinder rtlFinder;
-    bool test = true;
+    bool test = false;
     if (!test) {
         thread thread11(rtlFinder, ref(rtlInfo));
         thread11.detach();
@@ -70,9 +70,10 @@ int main() {
         if (n <= 0)
             continue;
         //test data,startup when get full package
+        cout << int(rdata) << endl;
         if (info.push(rdata) <= 0)continue;
         //wdata.meta.dataArea[0] = 0;
-        //cout << "Drop mode" << (info.result.meta.flag1[0] & (1 << 2)) << endl;
+        cout << "Drop mode" << (info.result.meta.flag1[0] & (1 << 2)) << endl;
         //Drop mode
         if ((info.result.meta.flag1[0] & (1 << 2)) != 0) {
             if ((state & DROP_MODE) == 0) {
@@ -104,7 +105,7 @@ int main() {
             Point2f ballPoint;
             int res = position.getPoint(ballPoint);
             if (res >= 0) {
-                wdata.meta.dataArea[0] |= 0x04;
+                wdata.meta.dataArea[0] |= 0x02;
                 wdata.meta.ringF1[0] = static_cast<unsigned char>(res);
                 memcpy(wdata.meta.ballDX, &ballPoint.x, sizeof(ballPoint.x));
                 memcpy(wdata.meta.ballDY, &ballPoint.y, sizeof(ballPoint.y));
@@ -115,15 +116,21 @@ int main() {
             cout << ">?" << endl;
             position.await();
         }
+
         //realtime find line
         double rtlCoordinate[4];
-        int res = rtlInfo.get(rtlCoordinate);
-        if (res >= 0) {
-            wdata.meta.dataArea[0] |= 0x08;
-            memcpy(wdata.meta.xAngle, &rtlCoordinate[0], sizeof(rtlCoordinate[0]));
-            memcpy(wdata.meta.yAngle, &rtlCoordinate[1], sizeof(rtlCoordinate[0]));
-            memcpy(wdata.meta.xDis, &rtlCoordinate[2], sizeof(rtlCoordinate[0]));
-            memcpy(wdata.meta.yDis, &rtlCoordinate[3], sizeof(rtlCoordinate[0]));
+        char res = rtlInfo.get(rtlCoordinate);
+        if (res > 0) {
+            if ((res & 1) != 0) {
+                wdata.meta.dataArea[0] |= 0x04;
+                memcpy(wdata.meta.xDis, &rtlCoordinate[2], sizeof(rtlCoordinate[0]));
+                memcpy(wdata.meta.xAngle, &rtlCoordinate[0], sizeof(rtlCoordinate[0]));
+            }
+            if ((res & 2) != 0) {
+                wdata.meta.dataArea[0] |= 0x08;
+                memcpy(wdata.meta.yDis, &rtlCoordinate[3], sizeof(rtlCoordinate[0]));
+                memcpy(wdata.meta.yAngle, &rtlCoordinate[1], sizeof(rtlCoordinate[0]));
+            }
         }
     }
     return 0;

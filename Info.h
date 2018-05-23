@@ -51,15 +51,7 @@ union In {
 struct OutMeta {
     unsigned char head[2];
     unsigned char dataArea[1];
-    unsigned char placeHold1[1];
-    unsigned char positionX[2];
-    unsigned char positionY[2];
-    unsigned char angle[4];
-    unsigned char dockDModule[4];
-    unsigned char dockArgument[4];
-    unsigned char dockRAngle[4];
     unsigned char ringF1[1];
-    unsigned char placeHold2[3];
     unsigned char ballDX[4];
     unsigned char ballDY[4];
     unsigned char xAngle[8];

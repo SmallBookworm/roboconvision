@@ -15,11 +15,22 @@ Mat RtlFinder::getThreshold(Mat tinput) {
     Mat closed;
     GaussianBlur(tinput, Gray, Size(5, 5), 2, 2);
     cvtColor(Gray, binary, CV_BGR2GRAY);
-    //GaussianBlur(Gray, Gray, Size(3, 3), 2, 2);
-    cv:
-    Scalar tempVal = cv::mean(binary);
+    //GaussianBlur(Gray, Gray, Size(3, 3), 2, 2)
+
+    //透视变换
+    float rotate[9] = {1.56581223e+00, 8.83653523e+00, -1.38263906e+03,
+                       -2.75104595e+00, 5.91734853e+00, 5.58120106e+02,
+                       1.88488768e-04, 1.00633412e-02, 1.00000000e+00};
+    Mat transform = Mat(3, 3, CV_32FC1, rotate);
+    Mat perspectiveImage;
+    warpPerspective(binary, perspectiveImage, transform, Size(binary.cols * 3, binary.rows * 3),
+                    INTER_LINEAR | WARP_INVERSE_MAP);
+    //截取能处理部分
+
+    Mat small = perspectiveImage(Rect(200, 200, 400, 400));
+    Scalar tempVal = cv::mean(small);
     float matMean = tempVal.val[0];
-    threshold(binary, closed, matMean + 15, 255, CV_THRESH_BINARY);//179
+    threshold(small, closed, matMean + 15, 255, CV_THRESH_BINARY);//179
     const int elesize = 15;
     Mat element = getStructuringElement(MORPH_RECT, Size(elesize, elesize));
     morphologyEx(closed, opened, MORPH_CLOSE, element);
@@ -245,54 +256,48 @@ int RtlFinder::operator()(RtlInfo &info) {
             break;
         }
         //imshow("frame", frame);
-        Mat srcThreshold = getThreshold(frame);
+        Mat small = getThreshold(frame);
 
-        //透视变换
-        float rotate[9] = {1.56581223e+00, 8.83653523e+00, -1.38263906e+03,
-                           -2.75104595e+00, 5.91734853e+00, 5.58120106e+02,
-                           1.88488768e-04, 1.00633412e-02, 1.00000000e+00};
-        Mat transform = Mat(3, 3, CV_32FC1, rotate);
-        Mat perspectiveImage;
-        warpPerspective(srcThreshold, perspectiveImage, transform, Size(srcThreshold.cols * 3, srcThreshold.rows * 3),
-                        INTER_LINEAR | WARP_INVERSE_MAP);
-        //截取能处理部分
-        Mat small = perspectiveImage(Rect(200, 200, 400, 400));
-        imshow("small", small);
+        //imshow("small", small);
         //waitKey(10);
         vector<Point> AllMidPointsB = FindAllMidPointsBottom(small);//找到所有底边白色带上的中点
         vector<Point> AllMidPointsL = FindAllMidPointsLeft(small);//找到所有右边白色带上的中点
         int num1 = AllMidPointsB.size();//如果中点数超过5个认为可以进行直线拟合
         int num2 = AllMidPointsL.size();//如果中点数超过5个认为可以进行直线拟合
 
-        if (num2 > 5) {
+        double theta2 = 0;
+        double error2 = 0;
+        double dy = 0;
+        double theta1 = 0;
+        double error1 = 0;
+        double dx = 0;
+        unsigned char valueFlag = 0;
 
+        if (num2 > 5) {
             cv::Mat B;
-            double theta2 = 0;
-            double error2 = 0;
-            double dy = 0;
-            double theta1 = 0;
-            double error1 = 0;
-            double dx = 0;
             polynomial_curve_fit(AllMidPointsL, 1, B);//拟合直线得到 k， b
             theta2 = atan(B.at<double>(1, 0)) / M_PI * 180;
             error2 = B.at<double>(0, 0);
             dy = B.at<double>(1, 0) * 399 + B.at<double>(0, 0);
             cout << "x方向 角度：" << theta2 << "    距离：" << dy << endl;
-
-            if (num1 > 5) {
-                cv::Mat A;
-                polynomial_curve_fit(AllMidPointsB, 1, A);//拟合直线得到 k， b
-                theta1 = atan(A.at<double>(1, 0)) / M_PI * 180;
-                error1 = A.at<double>(0, 0);
-                dx = (399 - A.at<double>(0, 0)) / A.at<double>(1, 0);
-                cout << "y方向 角度：" << theta1 << "    距离：" << dx << endl;
-            }
-            info.set(theta2, dy, theta1, dx);
-        } else {
-            cout << " 未出现正确图像" << endl;
-            continue;
+            valueFlag += 1;
         }
+        if (num1 > 5) {
+            cv::Mat A;
+            polynomial_curve_fit(AllMidPointsB, 1, A);//拟合直线得到 k， b
+            theta1 = atan(A.at<double>(1, 0)) / M_PI * 180;
+            error1 = A.at<double>(0, 0);
+            dx = (399 - A.at<double>(0, 0)) / A.at<double>(1, 0);
+            cout << "y方向 角度：" << theta1 << "    距离：" << dx << endl;
+            valueFlag += 2;
+        }
+
+        if (valueFlag == 0) {
+            //cout << " 未出现正确图像" << endl;
+            continue;
+        } else
+            info.set(theta2, dy, theta1, dx, valueFlag);
     }
-    destroyAllWindows();
+    //destroyAllWindows();
     return 0;
 }

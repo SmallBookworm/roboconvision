@@ -13,20 +13,23 @@ private:
     double xDis;
     double yAngle;
     double yDis;
+    //x:0x1,y:0x2
+    unsigned char flag;
     bool used;
     std::mutex rtl_mutex;
 public:
     RtlInfo() {
         used = true;
+        flag = 0;
     }
 
     void set(double xAngle,
              double xDis,
              double yAngle,
-             double yDis);
+             double yDis, unsigned char flag);
 
-//-1 used,1 success
-    int get(double *res);
+//-1 used,1 x,2 y,3 x y
+    char get(double *res);
 };
 
 

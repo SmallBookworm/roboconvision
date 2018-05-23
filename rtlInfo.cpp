@@ -6,16 +6,17 @@
 
 using namespace std;
 
-void RtlInfo::set(double xAngle, double xDis, double yAngle, double yDis) {
+void RtlInfo::set(double xAngle, double xDis, double yAngle, double yDis, unsigned char flag) {
     lock_guard<mutex> l(rtl_mutex);
     this->xAngle = xAngle;
     this->xDis = xDis;
     this->yAngle = yAngle;
     this->yDis = yDis;
+    this->flag = flag;
     this->used = false;
 }
 
-int RtlInfo::get(double *res) {
+char RtlInfo::get(double *res) {
     lock_guard<mutex> l(rtl_mutex);
     if (used) {
         return -1;
@@ -25,6 +26,6 @@ int RtlInfo::get(double *res) {
         res[2] = xDis;
         res[3] = yDis;
         used = true;
-        return 1;
+        return flag;
     }
 }
