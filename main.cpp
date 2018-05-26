@@ -122,14 +122,16 @@ int main() {
         char res = rtlInfo.get(rtlCoordinate);
         if (res > 0) {
             if ((res & 1) != 0) {
+                float line[] = {static_cast<float>(rtlCoordinate[2]), static_cast<float>(rtlCoordinate[0])};
                 wdata.meta.dataArea[0] |= 0x04;
-                memcpy(wdata.meta.xDis, &rtlCoordinate[2], sizeof(rtlCoordinate[0]));
-                memcpy(wdata.meta.xAngle, &rtlCoordinate[0], sizeof(rtlCoordinate[0]));
+                memcpy(wdata.meta.xDis, &line[0], sizeof(line[0]));
+                memcpy(wdata.meta.xAngle, &line[1], sizeof(line[0]));
             }
             if ((res & 2) != 0) {
+                float line[] = {static_cast<float>(rtlCoordinate[3]), static_cast<float>(rtlCoordinate[1])};
                 wdata.meta.dataArea[0] |= 0x08;
-                memcpy(wdata.meta.yDis, &rtlCoordinate[3], sizeof(rtlCoordinate[0]));
-                memcpy(wdata.meta.yAngle, &rtlCoordinate[1], sizeof(rtlCoordinate[0]));
+                memcpy(wdata.meta.yDis, &line[0], sizeof(line[0]));
+                memcpy(wdata.meta.yAngle, &line[1], sizeof(line[0]));
             }
         }
     }
