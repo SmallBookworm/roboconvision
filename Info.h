@@ -58,10 +58,12 @@ struct OutMeta {
     unsigned char yAngle[4];
     unsigned char xDis[4];
     unsigned char yDis[4];
+    unsigned char device[1];
+    unsigned char placeHold[3];
     unsigned char sum[sumNum];
 };
 union Out {
-    unsigned char data[32];
+    unsigned char data[36];
     OutMeta meta{head:{static_cast<unsigned char>(0xaa), static_cast<unsigned char>(0xbb)}};
 };
 

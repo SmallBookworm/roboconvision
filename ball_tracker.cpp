@@ -737,16 +737,18 @@ int Tracker::operator()(DeviationPosition &position) try {
 //            break;
 
     };
-
+    position.setThreadState(false);
     return EXIT_SUCCESS;
 }
 catch (const rs2::error &e) {
     std::cerr << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    "
               << e.what() << std::endl;
+    position.setThreadState(false);
     return EXIT_FAILURE;
 }
 catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
+    position.setThreadState(false);
     return EXIT_FAILURE;
 }
 

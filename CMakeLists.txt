@@ -7,7 +7,8 @@ find_package(OpenCV REQUIRED)
 
 set(SOURCE_FILES main.cpp serial.cpp Info.cpp Info.h
         ball_tracker.cpp cv-helpers.hpp ring_watcher.cpp deviationPosition.cpp
-        rtlFinder.cpp rtlFinder.h rtlInfo.cpp rtlInfo.h)
+        rtlFinder.cpp rtlFinder.h rtlInfo.cpp rtlInfo.h
+        ThreadInfo.cpp)
 
 add_executable(roboconVision ${SOURCE_FILES})
 

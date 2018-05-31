@@ -7,7 +7,7 @@
 using namespace std;
 
 int DeviationPosition::getPoint(cv::Point2f &out) {
-    lock_guard<mutex> l(coor_mutex);
+    lock_guard<mutex> l(info_mutex);
     if (used) {
         return -1;
     } else {
@@ -18,7 +18,7 @@ int DeviationPosition::getPoint(cv::Point2f &out) {
 }
 
 void DeviationPosition::setPoint(cv::Point2f point, int res) {
-    lock_guard<mutex> l(coor_mutex);
+    lock_guard<mutex> l(info_mutex);
     state = res;
     DeviationPosition::point = point;
     used = false;
@@ -56,20 +56,23 @@ void DeviationPosition::setRing(cv::Vec4f in) {
 
 
 void DeviationPosition::init(cv::Vec4f in) {
-    lock_guard<mutex> l(coor_mutex);
+    lock_guard<mutex> l(info_mutex);
     lock_guard<mutex> s(stop_mutex);
     lock_guard<mutex> m(stby_mutex);
     lock_guard<mutex> k(ring_mutex);
     state = -1;
     used = true;
     stop = false;
-    standby= false;
+    standby = false;
     ring = in;
 }
 
 void DeviationPosition::await() {
     lock_guard<mutex> s(stop_mutex);
     lock_guard<mutex> m(stby_mutex);
+    lock_guard<mutex> o(ts_mutex);
     stop = false;
-    standby= true;
+    standby = true;
+    //await can only to be used when make sure thread is run
+    threadState = true;
 }

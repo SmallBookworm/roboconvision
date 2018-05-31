@@ -246,10 +246,12 @@ bool RtlFinder::polynomial_curve_fit(std::vector<cv::Point> &key_point, int n, c
 int RtlFinder::operator()(RtlInfo &info) {
     VideoCapture capture(0);
     //capture.open("123.avi");
-    if (!capture.isOpened())
-        return 1;
+    if (!capture.isOpened()){
+        info.setThreadState(false);
+        return -1;
+    }
     Mat frame;
-    while (1) {
+    while (capture.isOpened()) {
         capture >> frame;
         if (frame.empty())//若视频播放完成，退出循环
         {
@@ -279,7 +281,7 @@ int RtlFinder::operator()(RtlInfo &info) {
             theta2 = atan(B.at<double>(1, 0)) / M_PI * 180;
             error2 = B.at<double>(0, 0);
             dy = B.at<double>(1, 0) * 399 + B.at<double>(0, 0);
-            cout << "x方向 角度：" << theta2 << "    距离：" << dy << endl;
+            //cout << "x方向 角度：" << theta2 << "    距离：" << dy << endl;
             valueFlag += 1;
         }
         if (num1 > 5) {
@@ -288,7 +290,7 @@ int RtlFinder::operator()(RtlInfo &info) {
             theta1 = atan(A.at<double>(1, 0)) / M_PI * 180;
             error1 = A.at<double>(0, 0);
             dx = (399 - A.at<double>(0, 0)) / A.at<double>(1, 0);
-            cout << "y方向 角度：" << theta1 << "    距离：" << dx << endl;
+            //cout << "y方向 角度：" << theta1 << "    距离：" << dx << endl;
             valueFlag += 2;
         }
 
@@ -299,5 +301,6 @@ int RtlFinder::operator()(RtlInfo &info) {
             info.set(theta2, dy, theta1, dx, valueFlag);
     }
     //destroyAllWindows();
+    info.setThreadState(false);
     return 0;
 }

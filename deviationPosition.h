@@ -7,14 +7,13 @@
 
 #include <opencv2/opencv.hpp>
 #include <mutex>
+#include "ThreadInfo.h"
 
-class DeviationPosition {
+class DeviationPosition :public ThreadInfo{
 private:
     //1 pass,2 fail
     int state;
     cv::Point2f point;
-    bool used;
-    std::mutex coor_mutex;
 private:
     bool stop;
     std::mutex stop_mutex;

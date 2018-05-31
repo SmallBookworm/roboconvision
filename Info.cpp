@@ -9,7 +9,7 @@ using namespace std;
 
 void assignSum(union Out *res) {
     int value = 0;
-    for (int i = 0; i < sizeof(res->data) - sumNum; ++i) {
+    for (int i = 0; i < sizeof(res->data); ++i) {
         unsigned char asone = static_cast<unsigned char>(res->data[i]);
         value += asone;
     }
