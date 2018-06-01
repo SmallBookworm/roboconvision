@@ -244,7 +244,7 @@ bool RtlFinder::polynomial_curve_fit(std::vector<cv::Point> &key_point, int n, c
 }
 
 int RtlFinder::operator()(RtlInfo &info) {
-    VideoCapture capture(0);
+    VideoCapture capture("/dev/video0");
     //capture.open("123.avi");
     if (!capture.isOpened()){
         info.setThreadState(false);

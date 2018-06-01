@@ -32,6 +32,7 @@ void printMes(int signo) {
 int main() {
     fd = ms.open_port(1);
     ms.set_opt(fd, BAUDRATE, 8, 'N', 1);
+    bool serialOpen = true;
 
     struct itimerval tick;
     signal(SIGALRM, printMes);
@@ -65,6 +66,15 @@ int main() {
     //1:video0,2:realsense
     unsigned char deviceState = 0;
     while (true) {
+        //test serial
+        if (access("/dev/ttyUSB0", F_OK) == -1 || fd < 0) {
+            close(fd);
+            serialOpen = false;
+            continue;
+        } else if (!serialOpen) {
+            fd = ms.open_port(1);
+            serialOpen = true;
+        }
         //device
         bool tVideo0 = (access("/dev/video0", F_OK) != -1);
         bool tVideo1 = (access("/dev/video1", F_OK) != -1);
@@ -91,7 +101,7 @@ int main() {
         if (n <= 0)
             continue;
         //test data,startup when get full package
-        cout << int(rdata) << endl;
+        //cout << int(rdata) << endl;
         if (info.push(rdata) <= 0)continue;
         //wdata.meta.dataArea[0] = 0;
         //cout << "Drop mode" << (info.result.meta.flag1[0] & (1 << 2)) << endl;
