@@ -251,7 +251,7 @@ int RtlFinder::operator()(RtlInfo &info) {
         return -1;
     }
     Mat frame;
-    while (access("/dev/video0", R_OK) != -1) {
+    while (capture.isOpened()) {
         capture >> frame;
         if (frame.empty())//若视频播放完成，退出循环
         {
