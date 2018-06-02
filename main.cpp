@@ -67,17 +67,19 @@ int main() {
     unsigned char deviceState = 0;
     while (true) {
         //test serial
-        if (access("/dev/ttyUSB0", F_OK) == -1 || fd < 0) {
-            close(fd);
-            serialOpen = false;
+        if (access("/dev/ttyUSB0", X_OK) == -1 || fd < 0) {
+            if(serialOpen){
+                close(fd);
+                serialOpen = false;
+            }
             continue;
         } else if (!serialOpen) {
             fd = ms.open_port(1);
             serialOpen = true;
         }
         //device
-        bool tVideo0 = (access("/dev/video0", F_OK) != -1);
-        bool tVideo1 = (access("/dev/video1", F_OK) != -1);
+        bool tVideo0 = (access("/dev/video0", X_OK) != -1);
+        bool tVideo1 = (access("/dev/video1", X_OK) != -1);
         if (tVideo0)
             deviceState |= (1 << 0);
         else
