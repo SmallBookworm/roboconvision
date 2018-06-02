@@ -67,8 +67,8 @@ int main() {
     unsigned char deviceState = 0;
     while (true) {
         //test serial
-        if (access("/dev/ttyUSB0", R_OK) == -1 || fd < 0) {
-            if(serialOpen){
+        if (access("/dev/ttyUSB0", R_OK | W_OK) == -1 || fd < 0) {
+            if (serialOpen) {
                 close(fd);
                 serialOpen = false;
             }
