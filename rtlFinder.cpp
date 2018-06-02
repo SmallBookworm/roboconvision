@@ -251,7 +251,7 @@ int RtlFinder::operator()(RtlInfo &info) {
         return -1;
     }
     Mat frame;
-    while (capture.isOpened()) {
+    while (access("/dev/video0", R_OK) != -1) {
         capture >> frame;
         if (frame.empty())//若视频播放完成，退出循环
         {
@@ -301,6 +301,7 @@ int RtlFinder::operator()(RtlInfo &info) {
             info.set(theta2, dy, theta1, dx, valueFlag);
     }
     //destroyAllWindows();
+    capture.release();
     info.setThreadState(false);
     return 0;
 }

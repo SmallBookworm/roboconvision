@@ -6,6 +6,7 @@
 #define ROBOCONVISION_RTLFINDER_H
 
 #include <opencv2/opencv.hpp>
+#include <zconf.h>
 #include "rtlInfo.h"
 
 class RtlFinder {
